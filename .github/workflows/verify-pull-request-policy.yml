@@ -19,4 +19,4 @@ jobs:
     uses: Cratis/Workflows/.github/workflows/verify-pull-request-policy.yml@main
     with:
       runs-on: ${{ vars.RUNNER_GATE || 'ubuntu-latest' }}
-      release-intent: false
+      release-intent: true
