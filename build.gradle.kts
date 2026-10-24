@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     kotlin("jvm") version "2.4.20" apply false
     id("com.vanniktech.maven.publish") version "0.37.0" apply false
-    id("com.github.ben-manes.versions") version "0.64.0"
+    id("com.github.ben-manes.versions") version "0.66.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
     id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.18.2"
 }
