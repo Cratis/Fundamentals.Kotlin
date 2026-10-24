@@ -1,0 +1,29 @@
+{
+  "revision": "f87af60265a2e59bd9b7435b0386ee06cb6d646a",
+  "sourceRoot": "Source/DotNET/Fundamentals",
+  "provenance": "Hand-derived from pinned source/specifications; not captured from a live .NET oracle. See temporal-collections.md and README.md.",
+  "cases": [
+    { "name": "time", "shape": "plain", "type": "time", "direction": "both", "json": "\"10:30:00.0000000\"", "source": "Json/TimeOnlyJsonConverter.cs:18; Fundamentals.Specs/Json/for_TimeOnlyJsonConverter/when_converting_from_time_only.cs" },
+    { "name": "time_concept", "shape": "concept", "type": "time", "direction": "both", "json": "\"10:30:00.0000000\"", "source": "Json/ConceptAsJsonConverter.cs:126-129" },
+    { "name": "time_fraction", "shape": "plain", "type": "time", "direction": "both", "json": "\"10:30:00.1234567\"", "source": "Json/TimeOnlyJsonConverter.cs:18" },
+    { "name": "time_fraction_concept", "shape": "concept", "type": "time", "direction": "both", "json": "\"10:30:00.1234567\"", "source": "Json/ConceptAsJsonConverter.cs:126-129" },
+    { "name": "time_max", "shape": "plain", "type": "time", "direction": "both", "json": "\"23:59:59.9999999\"", "source": "Json/TimeOnlyJsonConverter.cs:18" },
+    { "name": "time_max_concept", "shape": "concept", "type": "time", "direction": "both", "json": "\"23:59:59.9999999\"", "source": "Json/ConceptAsJsonConverter.cs:126-129" },
+    { "name": "time_seconds", "shape": "plain", "type": "time", "direction": "read", "json": "\"10:30:00\"", "source": "Json/TimeOnlyJsonConverter.cs:15 (ISO subset)" },
+    { "name": "time_seconds_concept", "shape": "concept", "type": "time", "direction": "read", "json": "\"10:30:00\"", "source": "Types/TypeConversion.cs:147-161" },
+    { "name": "time_minutes", "shape": "plain", "type": "time", "direction": "read", "json": "\"10:30\"", "source": "Json/TimeOnlyJsonConverter.cs:15 (ISO subset)" },
+    { "name": "time_minutes_concept", "shape": "concept", "type": "time", "direction": "read", "json": "\"10:30\"", "source": "Types/TypeConversion.cs:147-161" },
+    { "name": "date", "shape": "plain", "type": "date", "direction": "both", "json": "\"2024-01-15\"", "source": "Json/DateOnlyJsonConverter.cs:32" },
+    { "name": "date_concept", "shape": "concept", "type": "date", "direction": "both", "json": "\"2024-01-15\"", "source": "Json/ConceptAsJsonConverter.cs:122-125" },
+    { "name": "date_from_local_datetime", "shape": "plain", "type": "date", "direction": "read", "json": "\"2024-01-15T10:30:00\"", "source": "Json/DateOnlyJsonConverter.cs:17-25; Fundamentals.Specs/Json/for_DateOnlyJsonConverter/when_converting_to_date_only_from_iso_string.cs" },
+    { "name": "date_from_offset_datetime", "shape": "plain", "type": "date", "direction": "read", "json": "\"2024-01-15T10:30:00+02:00\"", "source": "Json/DateOnlyJsonConverter.cs:17-19; Fundamentals.Specs/Json/for_DateOnlyJsonConverter/when_converting_to_date_only_from_iso_string_from_datetimeoffset.cs" },
+    { "name": "date_from_z_datetime", "shape": "plain", "type": "date", "direction": "read", "json": "\"2024-01-15T10:30:00Z\"", "source": "Json/DateOnlyJsonConverter.cs:17-19" },
+    { "name": "string_list", "shape": "list", "type": "string", "direction": "both", "json": "[\"hello\",\"world\"]", "source": "Json/EnumerableConceptAsJsonConverter.cs:51-59; EnumerableConceptAsJsonConverterFactory.cs:18-22" },
+    { "name": "guid_list", "shape": "list", "type": "guid", "direction": "both", "json": "[\"6f9619ff-8b86-d011-b42d-00c04fc964ff\"]", "source": "Json/EnumerableConceptAsJsonConverter.cs:51-59; EnumerableConceptAsJsonConverterFactory.cs:18-22" },
+    { "name": "int_list", "shape": "list", "type": "int", "direction": "both", "json": "[1,2,3]", "source": "Json/EnumerableConceptAsJsonConverter.cs:51-59; EnumerableConceptAsJsonConverterFactory.cs:18-22" },
+    { "name": "empty_list", "shape": "list", "type": "int", "direction": "both", "json": "[]", "source": "Json/EnumerableConceptAsJsonConverter.cs:51-59; EnumerableConceptAsJsonConverterFactory.cs:18-22" },
+    { "name": "time_list", "shape": "list", "type": "time", "direction": "both", "json": "[\"10:30:00.0000000\"]", "source": "Json/EnumerableConceptAsJsonConverter.cs:51-59; ConceptAsJsonConverter.cs:126-129" },
+    { "name": "date_array", "shape": "array", "type": "date", "direction": "both", "json": "[\"2024-01-15\"]", "source": "Json/EnumerableConceptAsJsonConverter.cs:51-59; EnumerableConceptAsJsonConverterFactory.cs:18-22" },
+    { "name": "int_set", "shape": "set", "type": "int", "direction": "both", "json": "[42]", "source": "Json/EnumerableConceptAsJsonConverter.cs:51-59; EnumerableConceptAsJsonConverterFactory.cs:18-22" }
+  ]
+}

@@ -3,3 +3,7 @@ public final class io/cratis/fundamentals/jackson/ConceptsModule : tools/jackson
 	public fun setupModule (Ltools/jackson/databind/JacksonModule$SetupContext;)V
 }
 
+public final class io/cratis/fundamentals/jackson/TemporalModule : tools/jackson/databind/module/SimpleModule {
+	public fun <init> ()V
+}
+

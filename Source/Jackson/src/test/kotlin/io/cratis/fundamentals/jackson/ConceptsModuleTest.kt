@@ -48,6 +48,9 @@ class ConceptsModuleTest {
             fun of(value: Int): Competing = Competing(value, "factory")
         }
     }
+    class NullValue : ConceptAs<String?> {
+        override fun value(): String? = null
+    }
     data class NullableField(val id: GuidConcept?)
 
     private val mapper = JsonMapper.builder().addModule(ConceptsModule()).build()
@@ -60,6 +63,22 @@ class ConceptsModuleTest {
         val type = object : TypeReference<List<GuidConcept?>>() {}
         assertEquals(listOf<GuidConcept?>(null), mapper.readValue("[null]", type))
         assertEquals("[null]", mapper.writeValueAsString(listOf<GuidConcept?>(null)))
+    }
+
+    @Test
+    fun `null inner values write null and non-array concept lists fail`() {
+        assertEquals("null", mapper.writeValueAsString(NullValue()))
+        val type = object : TypeReference<List<IntConcept>>() {}
+        for (json in listOf("42", "{}", "\"value\"")) {
+            assertThrows(DatabindException::class.java) { mapper.readValue(json, type) }
+        }
+    }
+
+    @Test
+    fun `existing date concept reads remain strict ISO dates`() {
+        assertThrows(DatabindException::class.java) {
+            mapper.readValue("\"2024-01-15T10:30:00+02:00\"", DateConcept::class.java)
+        }
     }
 
     @Test

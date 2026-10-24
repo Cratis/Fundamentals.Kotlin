@@ -8,14 +8,14 @@ Shared domain primitives for JVM applications: typed concepts, correlation ident
 ## Requirements and artifacts
 
 - JDK **17** or later; build with JDK 17.
-- Kotlin **2.4.20** for Kotlin consumers. Java consumers need no Kotlin source or compiler.
-- Jackson **3.2.2** (`tools.jackson.*`), aligned with Spring Boot 4.1, for the optional Jackson artifact. No Spring dependency is required.
-- Gradle wrapper **8.14.4** for repository builds; Maven Central for consumption.
+- Kotlin **2.4.21** for Kotlin consumers. Java consumers need no Kotlin source or compiler.
+- Jackson **3.2.4** (`tools.jackson.*`), aligned with Spring Boot 4.1, for the optional Jackson artifact. No Spring dependency is required.
+- Gradle wrapper **8.14.6** for repository builds; Maven Central for consumption.
 
 | Artifact | Purpose |
 | --- | --- |
-| `io.cratis:fundamentals` | `ConceptAs`, `CorrelationId`, string casing; no Jackson runtime dependency |
-| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule`; includes core and Jackson databind transitively |
+| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, string casing; no Jackson runtime dependency |
+| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` and opt-in `TemporalModule`; includes core and Jackson databind transitively |
 
 Choose a published release version and replace `<released-version>` below. No release is implied by this source checkout.
 
@@ -34,9 +34,11 @@ dependencies {
 
 ```kotlin
 import io.cratis.fundamentals.concepts.ConceptAs
+import io.cratis.fundamentals.concepts.ConceptFactory
 import io.cratis.fundamentals.concepts.value
 import io.cratis.fundamentals.execution.CorrelationId
 import io.cratis.fundamentals.jackson.ConceptsModule
+import io.cratis.fundamentals.jackson.TemporalModule
 import io.cratis.fundamentals.strings.toCamelCase
 import java.util.UUID
 import tools.jackson.databind.json.JsonMapper
@@ -46,13 +48,13 @@ data class OrderId(private val id: UUID) : ConceptAs<UUID> {
 }
 
 fun main() {
-    val id = OrderId(UUID.fromString("6f9619ff-8b86-d011-b42d-00c04fc964ff"))
+    val id = ConceptFactory.create(OrderId::class.java, "6f9619ff-8b86-d011-b42d-00c04fc964ff")
     println(id.value) // Kotlin extension view of value()
     println(ConceptAs.valueTypeOf(OrderId::class.java)) // UUID
     println(CorrelationId.create()) // random UUID v4; NOT_SET is the all-zero UUID
     println("URLValue".toCamelCase()) // URLValue (acronym guard)
 
-    val mapper = JsonMapper.builder().addModule(ConceptsModule()).build()
+    val mapper = JsonMapper.builder().addModule(ConceptsModule()).addModule(TemporalModule()).build()
     val json = mapper.writeValueAsString(id) // a quoted UUID, not { "value": ... }
     check(mapper.readValue(json, OrderId::class.java) == id)
 }
@@ -62,8 +64,10 @@ fun main() {
 
 ```java
 import io.cratis.fundamentals.concepts.ConceptAs;
+import io.cratis.fundamentals.concepts.ConceptFactory;
 import io.cratis.fundamentals.execution.CorrelationId;
 import io.cratis.fundamentals.jackson.ConceptsModule;
+import io.cratis.fundamentals.jackson.TemporalModule;
 import io.cratis.fundamentals.strings.StringExtensions;
 import java.util.Objects;
 import java.util.UUID;
@@ -76,8 +80,8 @@ public final class Example {
     record Quantity(Integer value) implements ConceptAs<Integer> {}
 
     public static void main(String[] args) {
-        var mapper = JsonMapper.builder().addModule(new ConceptsModule()).build();
-        var id = new OrderId(UUID.randomUUID());
+        var mapper = JsonMapper.builder().addModule(new ConceptsModule()).addModule(new TemporalModule()).build();
+        var id = ConceptFactory.create(OrderId.class, "6f9619ff-8b86-d011-b42d-00c04fc964ff");
         var json = mapper.writeValueAsString(id);
         var restored = mapper.readValue(json, OrderId.class);
         System.out.println(restored.value());
@@ -89,6 +93,10 @@ public final class Example {
 ```
 
 A Java record's component must be boxed for generic primitive values: `Integer value`, not `int value`. There is only one required interface method, `value()`. Equality, hashing, comparison, validation, null rejection and display behavior belong to the implementation. Kotlin data classes and Java records supply value equality naturally.
+
+`ConceptDescriptor.of(OrderId::class.java)` (Java: `ConceptDescriptor.of(OrderId.class)`) caches the value type, construction and extraction. Construction prefers a record canonical constructor, public static `of(value)` (Kotlin: `@JvmStatic`), then a public single-argument constructor. `ConceptFactory` converts a bounded scalar set; integer conversions reject loss/overflow and invalid values fail rather than becoming defaults.
+
+`ConceptsModule` remains ServiceLoader-discoverable. `TemporalModule` is explicit only: raw LocalDate writes `yyyy-MM-dd`, and raw LocalTime writes `HH:mm:ss.fffffff`. LocalTime concepts always use that seven-digit form, truncating finer nanoseconds; this changes previously delegated LocalTime concept output. Reads are ISO-only, not culture-sensitive. Scalar concept collections use normal Jackson delegation, retaining null elements (unlike C#). See the [fixture provenance](Source/Jackson/src/test/resources/golden/README.md) and ledger for exact bounds.
 
 ## Generated values
 

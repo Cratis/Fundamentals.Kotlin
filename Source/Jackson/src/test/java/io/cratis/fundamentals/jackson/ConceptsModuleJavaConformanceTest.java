@@ -5,16 +5,22 @@ package io.cratis.fundamentals.jackson;
 
 import io.cratis.fundamentals.concepts.ConceptAs;
 import java.util.Map;
+import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 final class ConceptsModuleJavaConformanceTest {
     record OrderId(UUID value) implements ConceptAs<UUID> {}
     record Quantity(Integer value) implements ConceptAs<Integer> {}
     record Order(OrderId id, Quantity quantity) {}
+    record AppointmentTime(LocalTime value) implements ConceptAs<LocalTime> {}
+    record Appointment(LocalDate date, LocalTime time, List<AppointmentTime> times) {}
 
     static final class Sku implements ConceptAs<String> {
         private final String value;
@@ -42,6 +48,26 @@ final class ConceptsModuleJavaConformanceTest {
 
     private final JsonMapper mapper = JsonMapper.builder().addModule(new ConceptsModule()).build();
     private final UUID uuid = UUID.fromString("6f9619ff-8b86-d011-b42d-00c04fc964ff");
+
+    @Test
+    void temporalModuleAndConceptListsWorkFromJava() {
+        var temporal = JsonMapper.builder().addModule(new ConceptsModule()).addModule(new TemporalModule()).build();
+        var time = LocalTime.of(10, 30);
+        var appointment = new Appointment(LocalDate.of(2024, 1, 15), time, List.of(new AppointmentTime(time)));
+        var json = "{\"date\":\"2024-01-15\",\"time\":\"10:30:00.0000000\",\"times\":[\"10:30:00.0000000\"]}";
+        assertEquals(json, temporal.writeValueAsString(appointment));
+        assertEquals(appointment, temporal.readValue(json, Appointment.class));
+    }
+
+    @Test
+    void arraysAndListsOfRecordsRoundTripAsScalars() {
+        var id = new OrderId(UUID.fromString("6f9619ff-8b86-d011-b42d-00c04fc964ff"));
+        var json = "[\"6f9619ff-8b86-d011-b42d-00c04fc964ff\"]";
+        assertEquals(json, mapper.writeValueAsString(new OrderId[] {id}));
+        assertArrayEquals(new OrderId[] {id}, mapper.readValue(json, OrderId[].class));
+        assertEquals(json, mapper.writeValueAsString(List.of(id)));
+        assertEquals(List.of(id), mapper.readValue(json, new TypeReference<List<OrderId>>() {}));
+    }
 
     @Test
     void recordsRoundTripAsScalarProperties() {

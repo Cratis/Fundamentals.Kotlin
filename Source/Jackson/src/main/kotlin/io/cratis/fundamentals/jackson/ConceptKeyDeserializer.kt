@@ -4,8 +4,10 @@
 package io.cratis.fundamentals.jackson
 
 import io.cratis.fundamentals.concepts.ConceptAs
+import io.cratis.fundamentals.concepts.ConceptDescriptor
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 import java.util.UUID
@@ -19,7 +21,7 @@ internal class ConceptKeyDeserializer(private val conceptType: JavaType) : KeyDe
         ?: throw IllegalArgumentException("${conceptType.rawClass.name} does not declare a ConceptAs value type")
 
     override fun deserializeKey(key: String, context: DeserializationContext): Any = try {
-        ConceptFactories.create(conceptType.rawClass, parseKey(key, context))
+        ConceptDescriptor.of(conceptType.rawClass).create(checkNotNull(parseKey(key, context)))
     } catch (exception: Exception) {
         throw DatabindException.from(context, "Could not create ${conceptType.rawClass.name} key: ${exception.message}", exception)
     }
@@ -36,6 +38,7 @@ internal class ConceptKeyDeserializer(private val conceptType: JavaType) : KeyDe
         BigDecimal::class.java -> BigDecimal(key)
         Boolean::class.javaObjectType -> key.toBooleanStrict()
         LocalDate::class.java -> LocalDate.parse(key)
+        LocalTime::class.java -> TemporalWireFormat.parseTime(key)
         OffsetDateTime::class.java -> OffsetDateTime.parse(key, ISO_OFFSET_DATE_TIME)
         else -> context.findKeyDeserializer(valueType, null).deserializeKey(key, context)
     }

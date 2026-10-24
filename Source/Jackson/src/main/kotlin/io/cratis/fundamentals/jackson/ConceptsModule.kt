@@ -20,8 +20,10 @@ import tools.jackson.databind.ser.Serializers
 /**
  * Jackson 3 scalar and text-key support for [ConceptAs] implementations.
  * Register explicitly or discover through `JsonMapper.builder().findAndAddModules()`.
- * Construction prefers a one-component record, then a public static `of`, then a public
- * single-argument constructor. Keys use value text, not C# embedded-JSON property names.
+ * Construction uses core `ConceptDescriptor`: a one-component record, then public static
+ * `of`, then a public single-argument constructor. LocalTime concepts write `HH:mm:ss.fffffff`,
+ * truncating finer nanoseconds. Raw date/time overrides require explicit [TemporalModule].
+ * Keys use value text, not C# embedded-JSON property names.
  */
 public class ConceptsModule : SimpleModule("Cratis.Fundamentals.Concepts") {
     public override fun setupModule(context: SetupContext) {
