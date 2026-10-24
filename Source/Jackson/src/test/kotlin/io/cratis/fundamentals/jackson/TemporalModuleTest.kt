@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import tools.jackson.core.type.TypeReference
 import tools.jackson.databind.DatabindException
+import tools.jackson.databind.cfg.DateTimeFeature
 import tools.jackson.databind.json.JsonMapper
 
 class TemporalModuleTest {
@@ -24,26 +25,61 @@ class TemporalModuleTest {
     private val date = LocalDate.of(2024, 1, 15)
     private val time = LocalTime.of(10, 30, 45, 123456700)
 
+    private val expected = expectedValues()
+    private val collectionTypes = mapOf(
+        "string_list" to mapper.typeFactory.constructCollectionType(List::class.java, ConceptsModuleGoldenTest.StringConcept::class.java),
+        "guid_list" to mapper.typeFactory.constructCollectionType(List::class.java, ConceptsModuleGoldenTest.GuidConcept::class.java),
+        "int_list" to mapper.typeFactory.constructCollectionType(List::class.java, ConceptsModuleGoldenTest.IntConcept::class.java),
+        "empty_list" to mapper.typeFactory.constructCollectionType(List::class.java, ConceptsModuleGoldenTest.IntConcept::class.java),
+        "time_list" to mapper.typeFactory.constructCollectionType(List::class.java, ConceptCollectionsTest.TimeConcept::class.java),
+        "date_array" to mapper.typeFactory.constructArrayType(ConceptsModuleGoldenTest.DateConcept::class.java),
+        "int_set" to mapper.typeFactory.constructCollectionType(Set::class.java, ConceptsModuleGoldenTest.IntConcept::class.java)
+    )
+
     @TestFactory
     fun `temporal and collection wire follows the pinned CSharp rows`(): List<DynamicTest> =
         checkNotNull(javaClass.getResourceAsStream("/golden/temporal-collections.json")).use { stream ->
-            mapper.readTree(stream).get("cases").toList().map { row ->
+            val rows = mapper.readTree(stream).get("cases").toList()
+            assertEquals(expected.keys, rows.map { it.get("name").asString() }.toSet())
+            assertEquals(expected.size, rows.size)
+            rows.map { row ->
                 val name = row.get("name").asString()
                 DynamicTest.dynamicTest("$name ${row.get("source").asString()}") {
-                    val (value, type) = when (row.get("type").asString()) {
-                        "date" -> date to mapper.constructType(LocalDate::class.java)
-                        "time" -> LocalTime.parse(row.get("value").asString()) to mapper.constructType(LocalTime::class.java)
-                        "timeConcept" -> ConceptCollectionsTest.TimeConcept(LocalTime.parse(row.get("value").asString())) to mapper.constructType(ConceptCollectionsTest.TimeConcept::class.java)
-                        "intList" -> listOf(ConceptsModuleGoldenTest.IntConcept(42)) to mapper.constructType(object : TypeReference<List<ConceptsModuleGoldenTest.IntConcept>>() {}.type)
-                        "emptyList" -> emptyList<Any>() to mapper.constructType(object : TypeReference<List<ConceptsModuleGoldenTest.IntConcept>>() {}.type)
-                        else -> error("Unknown fixture type: $name")
-                    }
+                    val value = expected.getValue(name)
+                    val type = collectionTypes[name] ?: mapper.constructType(value.javaClass)
                     val json = row.get("json").asString()
-                    assertEquals(value, mapper.readValue<Any>(json, type))
+                    val restored = mapper.readValue<Any>(json, type)
+                    assertEquals(comparable(value), comparable(restored))
                     if (row.get("direction").asString() == "both") assertEquals(json, mapper.writeValueAsString(value))
                 }
             }
         }
+
+    private fun comparable(value: Any): Any = if (value is Array<*>) value.toList() else value
+
+    private fun expectedValues(): Map<String, Any> {
+        val whole = LocalTime.of(10, 30)
+        val fraction = LocalTime.of(10, 30, 0, 123456700)
+        val maximum = LocalTime.of(23, 59, 59, 999999900)
+        val temporal = mapOf(
+            "time" to whole, "time_concept" to ConceptCollectionsTest.TimeConcept(whole),
+            "time_fraction" to fraction, "time_fraction_concept" to ConceptCollectionsTest.TimeConcept(fraction),
+            "time_max" to maximum, "time_max_concept" to ConceptCollectionsTest.TimeConcept(maximum),
+            "time_seconds" to whole, "time_seconds_concept" to ConceptCollectionsTest.TimeConcept(whole),
+            "time_minutes" to whole, "time_minutes_concept" to ConceptCollectionsTest.TimeConcept(whole),
+            "date" to date, "date_concept" to ConceptsModuleGoldenTest.DateConcept(date),
+            "date_from_local_datetime" to date, "date_from_offset_datetime" to date, "date_from_z_datetime" to date
+        )
+        return temporal + mapOf(
+            "string_list" to listOf(ConceptsModuleGoldenTest.StringConcept("hello"), ConceptsModuleGoldenTest.StringConcept("world")),
+            "guid_list" to listOf(ConceptsModuleGoldenTest.GuidConcept(java.util.UUID.fromString("6f9619ff-8b86-d011-b42d-00c04fc964ff"))),
+            "int_list" to listOf(1, 2, 3).map { ConceptsModuleGoldenTest.IntConcept(it) },
+            "empty_list" to emptyList<ConceptsModuleGoldenTest.IntConcept>(),
+            "time_list" to listOf(ConceptCollectionsTest.TimeConcept(whole)),
+            "date_array" to arrayOf(ConceptsModuleGoldenTest.DateConcept(date)),
+            "int_set" to setOf(ConceptsModuleGoldenTest.IntConcept(42))
+        )
+    }
 
     @Test
     fun `raw properties lists and nulls use string scalars`() {
@@ -93,6 +129,19 @@ class TemporalModuleTest {
         assertEquals(value, mapper.readValue("\"10:30:45.1234567\"", ConceptCollectionsTest.TimeConcept::class.java))
         assertEquals(json, mapper.writeValueAsString(mapOf(value to 1)))
         assertEquals(mapOf(value to 1), mapper.readValue(json, object : TypeReference<Map<ConceptCollectionsTest.TimeConcept, Int>>() {}))
+    }
+
+    @Test
+    fun `temporal module always writes strings regardless of timestamp setting`() {
+        val timestamps = JsonMapper.builder().enable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .addModule(TemporalModule()).build()
+        val strings = JsonMapper.builder().disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .addModule(TemporalModule()).build()
+        for (configured in listOf(timestamps, strings)) {
+            assertEquals("\"2024-01-15\"", configured.writeValueAsString(date))
+            assertEquals("\"10:30:45.1234567\"", configured.writeValueAsString(time))
+            assertEquals(date, configured.readValue("\"2024-01-15T23:30:00-04:00\"", LocalDate::class.java))
+        }
     }
 
     @Test

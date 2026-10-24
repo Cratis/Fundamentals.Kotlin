@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 final class ConceptsModuleJavaConformanceTest {
     record OrderId(UUID value) implements ConceptAs<UUID> {}
@@ -56,6 +57,16 @@ final class ConceptsModuleJavaConformanceTest {
         var json = "{\"date\":\"2024-01-15\",\"time\":\"10:30:00.0000000\",\"times\":[\"10:30:00.0000000\"]}";
         assertEquals(json, temporal.writeValueAsString(appointment));
         assertEquals(appointment, temporal.readValue(json, Appointment.class));
+    }
+
+    @Test
+    void arraysAndListsOfRecordsRoundTripAsScalars() {
+        var id = new OrderId(UUID.fromString("6f9619ff-8b86-d011-b42d-00c04fc964ff"));
+        var json = "[\"6f9619ff-8b86-d011-b42d-00c04fc964ff\"]";
+        assertEquals(json, mapper.writeValueAsString(new OrderId[] {id}));
+        assertArrayEquals(new OrderId[] {id}, mapper.readValue(json, OrderId[].class));
+        assertEquals(json, mapper.writeValueAsString(List.of(id)));
+        assertEquals(List.of(id), mapper.readValue(json, new TypeReference<List<OrderId>>() {}));
     }
 
     @Test

@@ -16,14 +16,15 @@ import tools.jackson.databind.ValueSerializer
 import tools.jackson.databind.module.SimpleModule
 
 /**
- * Explicit, opt-in C# DateOnly/TimeOnly wire support for raw [LocalDate] and [LocalTime].
+ * Explicit, opt-in support for C# `DateOnlyJsonConverter` / `TimeOnlyJsonConverter`
+ * wire contracts on raw [LocalDate] and [LocalTime].
  *
  * Dates write ISO `yyyy-MM-dd` and read ISO dates or date-times (local date, no zone shift).
  * Times write `HH:mm:ss.fffffff`, truncating nanoseconds beyond seven digits, and read ISO
  * local times. Invalid tokens/text produce databind errors; null stays null. This module
  * is not auto-discovered and does not change Jackson defaults unless explicitly registered.
  */
-public class TemporalModule : SimpleModule("CratisTemporal") {
+public class TemporalModule : SimpleModule("Cratis.Fundamentals.Temporal") {
     init {
         addSerializer(LocalDate::class.java, TemporalSerializer { it.toString() })
         addDeserializer(LocalDate::class.java, TemporalDeserializer(LocalDate::class.java, TemporalWireFormat::parseDate))
