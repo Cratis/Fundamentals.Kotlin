@@ -1,0 +1,38 @@
+# Copyright (c) Cratis. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "Etc/UTC"
+    labels:
+      - dependencies
+      - no-release
+    open-pull-requests-limit: 10
+    ignore:
+      # Gradle 9 needs a deliberate toolchain and plugin migration.
+      - dependency-name: "gradle-wrapper"
+        versions: [">=9.0.0"]
+      # Jackson stays on the Spring Boot 4.1 managed line.
+      - dependency-name: "tools.jackson.*"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+    groups:
+      kotlin-toolchain:
+        patterns:
+          - "jvm"
+          - "org.jetbrains.kotlin:*"
+        update-types:
+          - minor
+          - patch
+      gradle-non-major:
+        exclude-patterns:
+          - "jvm"
+          - "org.jetbrains.kotlin:*"
+        update-types:
+          - minor
+          - patch

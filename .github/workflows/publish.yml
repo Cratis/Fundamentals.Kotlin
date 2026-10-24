@@ -1,0 +1,171 @@
+# Copyright (c) Cratis. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+name: Publish
+
+# Never cancel a release in flight: a later merge must not interrupt signing or publication.
+# The literal prefix isolates publication from verification concurrency groups, including
+# any future reusable workflows. Verification must never cancel signing or publication.
+#
+# `queue: max` keeps up to 100 pending runs first-in first-out, so a merge that lands while a release
+# publishes is never replaced by a later one and keeps its release. GitHub rejects `queue: max`
+# combined with `cancel-in-progress`, and leaving it out never cancels a run in flight.
+concurrency:
+  group: publish-${{ github.workflow }}-${{ github.ref }}
+  queue: max
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release"
+        required: true
+        default: "0.0.0"
+        type: string
+      release-notes:
+        description: "Release notes"
+        required: true
+        default: "No release notes"
+        type: string
+      logLevel:
+        description: "Log level"
+        required: true
+        default: "warning"
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
+  # A push to main has the permissions and secrets required to publish contributions from forks.
+  push:
+    branches:
+      - main
+    paths:
+      - "Source/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - "gradle/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Verify release candidate
+        run: ./gradlew clean build --no-configuration-cache
+
+  release_and_publish:
+    needs: [verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      issues: write
+      contents: write
+      pull-requests: read
+    environment: maven-central
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      publish: ${{ steps.release.outputs.should-publish }}
+      reason: ${{ steps.release.outputs.reason }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The action determines the version in its main step and creates the GitHub release in its post step.
+      # Keeping Maven publication in this job means a failed upload prevents that post step from publishing a release.
+      - name: Prepare release
+        id: release
+        uses: cratis/release-action@f5fc6db6adbb4db6e6c4548cd7addfc924426e69 # v1
+        with:
+          version: ${{ github.event.inputs.version }}
+          release-notes: ${{ github.event.inputs.release-notes }}
+
+      - name: Set up JDK 17
+        if: steps.release.outputs.should-publish == 'true'
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        if: steps.release.outputs.should-publish == 'true'
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Validate Gradle wrapper
+        if: steps.release.outputs.should-publish == 'true'
+        uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Publish signed packages to Maven Central
+        if: steps.release.outputs.should-publish == 'true'
+        env:
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+        run: |
+          ./gradlew \
+            :Source:Fundamentals:publishAndReleaseToMavenCentral \
+            :Source:Jackson:publishAndReleaseToMavenCentral \
+            --no-configuration-cache \
+            -Pversion="$RELEASE_VERSION"
+
+  verify-published:
+    # A missing release-intent label must not turn a merge into a silently green no-op.
+    if: always() && needs.release_and_publish.result == 'success' && contains(fromJSON('["no-label", "error"]'), needs.release_and_publish.outputs.reason)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [release_and_publish]
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Verify an intentional no-release merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REASON: ${{ needs.release_and_publish.outputs.reason }}
+        run: |
+          reason="$RELEASE_REASON"
+          if [ "$reason" = "error" ]; then
+            echo "::error::The release action failed; no-release cannot suppress a release error."
+            exit 1
+          fi
+
+          pulls=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls")
+          merged_count=$(printf '%s' "$pulls" | jq --arg sha "$GITHUB_SHA" '[.[] | select(.merge_commit_sha == $sha)] | length')
+          if [ "$merged_count" -ne 1 ]; then
+            echo "::error::Expected exactly one pull request whose merge commit is $GITHUB_SHA; found $merged_count."
+            exit 1
+          fi
+          no_release=$(printf '%s' "$pulls" | jq -r --arg sha "$GITHUB_SHA" \
+            '[.[] | select(.merge_commit_sha == $sha) | .labels[].name] | any(. == "no-release")')
+
+          if [ "$no_release" = "true" ]; then
+            echo "The merged pull request explicitly selected no-release; publishing nothing is intended."
+            exit 0
+          fi
+
+          echo "::error::Nothing was published and no release was cut (reason: $reason). Add exactly one release-intent label before merge."
+          exit 1
