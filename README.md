@@ -15,7 +15,7 @@ Shared domain primitives for JVM applications: typed concepts, correlation ident
 | Artifact | Purpose |
 | --- | --- |
 | `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, string casing; no Jackson runtime dependency |
-| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` and opt-in `TemporalModule`; includes core and Jackson databind transitively |
+| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` (optional embedded JSON keys), opt-in `TemporalModule`, `EnumModule` and `TimeSpanModule`; includes core and Jackson databind transitively |
 
 Choose a published release version and replace `<released-version>` below. No release is implied by this source checkout.
 
@@ -97,6 +97,32 @@ A Java record's component must be boxed for generic primitive values: `Integer v
 `ConceptDescriptor.of(OrderId::class.java)` (Java: `ConceptDescriptor.of(OrderId.class)`) caches the value type, construction and extraction. Construction prefers a record canonical constructor, public static `of(value)` (Kotlin: `@JvmStatic`), then a public single-argument constructor. `ConceptFactory` converts a bounded scalar set; integer conversions reject loss/overflow and invalid values fail rather than becoming defaults.
 
 `ConceptsModule` remains ServiceLoader-discoverable. `TemporalModule` is explicit only: raw LocalDate writes `yyyy-MM-dd`, and raw LocalTime writes `HH:mm:ss.fffffff`. LocalTime concepts always use that seven-digit form, truncating finer nanoseconds; this changes previously delegated LocalTime concept output. Reads are ISO-only, not culture-sensitive. Scalar concept collections use normal Jackson delegation, retaining null elements (unlike C#). See the [fixture provenance](Source/Jackson/src/test/resources/golden/README.md) and ledger for exact bounds.
+
+### Opt-in wire contracts
+
+Existing `ConceptsModule()` and `TemporalModule()` output is unchanged. `EnumModule` writes enum values as ordinal numbers and reads ordinals, numeric strings, case-insensitive names, `@JsonProperty`/`@JsonAlias` and `toString()` text; undefined values fail. Enum map keys keep Jackson's names. Ordinals match C# only for declarations ordered from zero without gaps; flags, explicit values and non-int backing types are not supported.
+
+`TimeSpanModule` writes Duration values and map keys as C# TimeSpan `"c"` strings (`[-][d.]hh:mm:ss[.fffffff]`), truncating nanoseconds toward zero to 100 ns. Reads accept this shape and ISO-8601, not culture-sensitive or short day/hour-minute forms. JVM durations outside the C# TimeSpan range are not restricted.
+
+Use `ConceptsModule(ConceptKeyFormat.EMBEDDED_JSON)` to write concept map keys as compact embedded JSON like C# dictionaries, while still reading old plain keys. A string-like key includes inner JSON quotes; legacy text containing a JSON string literal is ambiguous and its decoded value wins. Only concept keys change, not arbitrary complex keys. Enum- and Duration-valued concepts follow the modules registered on the same mapper.
+
+```kotlin
+val mapper = JsonMapper.builder()
+    .addModule(ConceptsModule(ConceptKeyFormat.EMBEDDED_JSON))
+    .addModule(EnumModule())
+    .addModule(TimeSpanModule())
+    .build()
+```
+
+```java
+var mapper = JsonMapper.builder()
+    .addModule(new ConceptsModule(ConceptKeyFormat.EMBEDDED_JSON))
+    .addModule(new EnumModule())
+    .addModule(new TimeSpanModule())
+    .build();
+```
+
+Import the types from `io.cratis.fundamentals.jackson`. `EnumModule`, `TimeSpanModule` and `TemporalModule` are never ServiceLoader-discovered; discovery creates the no-arg `ConceptsModule` with `ConceptKeyFormat.PLAIN`. Choose the key option explicitly on that module; registering it before or after EnumModule/TimeSpanModule gives the same wire.
 
 ## Generated values
 
@@ -181,7 +207,7 @@ A private constructor plus a public static `of` works. Missing construction shap
 
 Supported underlying scalars: UUID, String, Int/Integer, Long, Short, Byte, Double, Float, BigDecimal, Boolean, LocalDate and OffsetDateTime. JSON null stays null; lists of concepts contain scalar values. UUID text is canonical lowercase. OffsetDateTime writes explicit seconds, a trimmed optional fraction and numeric offsets (including `+00:00`); reads preserve the original offset and accept `Z`.
 
-Concept map keys use the underlying **text** value, not JSON text inside the property name. This deliberately differs from C# for string-like keys. Signed JVM bytes, whole-float/exponent spelling, Unicode escaping, arbitrary-precision decimal range and nanosecond timestamps also differ from .NET. See [wire differences](Documentation/parity.md#wire-and-language-differences) before sharing payloads across runtimes. Delegation for unsupported types does not imply parity.
+Concept map keys default to the underlying **text** value, not JSON text inside the property name. Opt into `ConceptKeyFormat.EMBEDDED_JSON` on `ConceptsModule` for C#-style names; outer quote escaping can still differ (`\"` versus `\u0022`) while decoded property names agree. Signed JVM bytes, whole-float/exponent spelling, Unicode escaping, arbitrary-precision decimal range and nanosecond timestamps also differ from .NET. See [wire differences](Documentation/parity.md#wire-and-language-differences) before sharing payloads across runtimes. Delegation for unsupported types does not imply parity.
 
 ## Build and test
 
