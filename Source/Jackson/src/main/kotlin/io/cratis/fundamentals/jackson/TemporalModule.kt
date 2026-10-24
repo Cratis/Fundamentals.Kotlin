@@ -33,13 +33,13 @@ public class TemporalModule : SimpleModule("Cratis.Fundamentals.Temporal") {
     }
 }
 
-private class TemporalSerializer<T : Any>(private val format: (T) -> String) : ValueSerializer<T>() {
+internal class TemporalSerializer<T : Any>(private val format: (T) -> String) : ValueSerializer<T>() {
     override fun serialize(value: T, generator: JsonGenerator, context: SerializationContext) {
         generator.writeString(format(value))
     }
 }
 
-private class TemporalDeserializer<T : Any>(
+internal class TemporalDeserializer<T : Any>(
     private val type: Class<T>, private val parse: (String) -> T
 ) : ValueDeserializer<T>() {
     override fun deserialize(parser: JsonParser, context: DeserializationContext): T {

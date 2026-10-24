@@ -1,0 +1,19 @@
+{
+  "revision": "f87af60265a2e59bd9b7435b0386ee06cb6d646a",
+  "sourceRoot": "Source/DotNET/Fundamentals",
+  "provenance": "Hand-derived from pinned C# source/specifications, not a live .NET oracle. Tests compare decoded property names and values, not outer escape spelling. C# often writes inner quotes as \\u0022; Jackson writes \\\". See README.md.",
+  "cases": [
+    { "name": "string", "shape": "map", "type": "StringConcept", "direction": "both", "json": "{\"\\\"one\\\"\":1,\"\\\"two\\\"\":2,\"\\\"three\\\"\":3}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:93-99,117-124; Fundamentals.Specs/Json/for_ComplexKeyDictionaryJsonConverterFactory/when_serializing_and_deserializing_dictionary_with_concept_as_string_key.cs" },
+    { "name": "guid", "shape": "map", "type": "GuidConcept", "direction": "both", "json": "{\"\\\"6f9619ff-8b86-d011-b42d-00c04fc964ff\\\"\":1}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:117-124; Json/ConceptAsJsonConverter.cs:178-181" },
+    { "name": "int", "shape": "map", "type": "IntConcept", "direction": "both", "json": "{\"42\":1}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:117-124; Json/ConceptAsJsonConverter.cs:146-149" },
+    { "name": "decimal", "shape": "map", "type": "DecimalConcept", "direction": "both", "json": "{\"42.43\":1}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:117-124; Json/ConceptAsJsonConverter.cs:170-173" },
+    { "name": "date", "shape": "map", "type": "DateConcept", "direction": "both", "json": "{\"\\\"2024-01-15\\\"\":1}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:117-124; Json/ConceptAsJsonConverter.cs:122-125" },
+    { "name": "time", "shape": "map", "type": "TimeConcept", "direction": "both", "json": "{\"\\\"10:30:00.0000000\\\"\":1}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:117-124; Json/ConceptAsJsonConverter.cs:126-129" },
+    { "name": "offset", "shape": "map", "type": "OffsetConcept", "direction": "both", "json": "{\"\\\"2024-01-15T10:30:00+00:00\\\"\":1}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:117-124; Json/ConceptAsJsonConverter.cs:186-190 (delegates to STJ OffsetDateTime wire)" },
+    { "name": "enum", "shape": "map", "type": "RankConcept", "direction": "both", "json": "{\"2\":1}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:117-124; Json/ConceptAsJsonConverter.cs:182-185" },
+    { "name": "duration", "shape": "map", "type": "SpanConcept", "direction": "both", "json": "{\"\\\"01:30:00\\\"\":1}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:117-124; Json/ConceptAsJsonConverter.cs:189-190; STJ TimeSpanConverter.cs:77-85 (dotnet/runtime@v9.0.0)" },
+    { "name": "empty", "shape": "map", "type": "StringConcept", "direction": "both", "json": "{}", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:114-127" },
+    { "name": "null", "shape": "map", "type": "StringConcept", "direction": "both", "json": "null", "source": "Json/ComplexKeyDictionaryJsonConverterFactory.cs:108-111" },
+    { "name": "concept_values", "shape": "map", "type": "Map<String,IntConcept>", "direction": "both", "json": "{\"answer\":42}", "source": "Json/ConceptAsJsonConverter.cs:146-149 (string keys are not complex)" }
+  ]
+}

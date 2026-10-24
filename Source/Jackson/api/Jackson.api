@@ -1,9 +1,28 @@
+public final class io/cratis/fundamentals/jackson/ConceptKeyFormat : java/lang/Enum {
+	public static final field EMBEDDED_JSON Lio/cratis/fundamentals/jackson/ConceptKeyFormat;
+	public static final field PLAIN Lio/cratis/fundamentals/jackson/ConceptKeyFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/cratis/fundamentals/jackson/ConceptKeyFormat;
+	public static fun values ()[Lio/cratis/fundamentals/jackson/ConceptKeyFormat;
+}
+
 public final class io/cratis/fundamentals/jackson/ConceptsModule : tools/jackson/databind/module/SimpleModule {
+	public fun <init> ()V
+	public fun <init> (Lio/cratis/fundamentals/jackson/ConceptKeyFormat;)V
+	public synthetic fun <init> (Lio/cratis/fundamentals/jackson/ConceptKeyFormat;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun setupModule (Ltools/jackson/databind/JacksonModule$SetupContext;)V
+}
+
+public final class io/cratis/fundamentals/jackson/EnumModule : tools/jackson/databind/module/SimpleModule {
 	public fun <init> ()V
 	public fun setupModule (Ltools/jackson/databind/JacksonModule$SetupContext;)V
 }
 
 public final class io/cratis/fundamentals/jackson/TemporalModule : tools/jackson/databind/module/SimpleModule {
+	public fun <init> ()V
+}
+
+public final class io/cratis/fundamentals/jackson/TimeSpanModule : tools/jackson/databind/module/SimpleModule {
 	public fun <init> ()V
 }
 

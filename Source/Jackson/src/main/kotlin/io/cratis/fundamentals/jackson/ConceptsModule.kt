@@ -23,15 +23,25 @@ import tools.jackson.databind.ser.Serializers
  * Construction uses core `ConceptDescriptor`: a one-component record, then public static
  * `of`, then a public single-argument constructor. LocalTime concepts write `HH:mm:ss.fffffff`,
  * truncating finer nanoseconds. Raw date/time overrides require explicit [TemporalModule].
- * Keys use value text, not C# embedded-JSON property names.
+ * Keys default to value text. Opt into [ConceptKeyFormat.EMBEDDED_JSON] for C#
+ * `Json/ComplexKeyDictionaryJsonConverterFactory.cs:87-124,142-145` property names.
+ * Embedded reads try JSON first, then legacy text; a JSON string literal key is therefore
+ * ambiguous and its decoded value wins. Enum and Duration values follow registered modules.
+ * Non-concept keys are unchanged. ServiceLoader discovery uses [ConceptKeyFormat.PLAIN].
  */
-public class ConceptsModule : SimpleModule("Cratis.Fundamentals.Concepts") {
+public class ConceptsModule @JvmOverloads public constructor(
+    private val keyFormat: ConceptKeyFormat = ConceptKeyFormat.PLAIN
+) : SimpleModule("Cratis.Fundamentals.Concepts") {
     public override fun setupModule(context: SetupContext) {
         super.setupModule(context)
         context.addSerializers(ConceptSerializers(ConceptValueSerializer))
         context.addDeserializers(ConceptDeserializers)
-        context.addKeySerializers(ConceptSerializers(ConceptKeySerializer))
-        context.addKeyDeserializers(ConceptKeyDeserializers)
+        val keySerializer = when (keyFormat) {
+            ConceptKeyFormat.PLAIN -> ConceptKeySerializer
+            ConceptKeyFormat.EMBEDDED_JSON -> EmbeddedConceptKeySerializer
+        }
+        context.addKeySerializers(ConceptSerializers(keySerializer))
+        context.addKeyDeserializers(ConceptKeyDeserializers(keyFormat))
     }
 }
 
@@ -55,10 +65,16 @@ private object ConceptDeserializers : Deserializers.Base() {
     ): ValueDeserializer<*>? = if (ConceptAs.isConcept(type.rawClass)) ConceptValueDeserializer(type) else null
 }
 
-private object ConceptKeyDeserializers : KeyDeserializers {
+private class ConceptKeyDeserializers(private val format: ConceptKeyFormat) : KeyDeserializers {
     override fun findKeyDeserializer(
         type: JavaType,
         config: DeserializationConfig,
         beanDesc: BeanDescription.Supplier
-    ): KeyDeserializer? = if (ConceptAs.isConcept(type.rawClass)) ConceptKeyDeserializer(type) else null
+    ): KeyDeserializer? {
+        if (!ConceptAs.isConcept(type.rawClass)) return null
+        return when (format) {
+            ConceptKeyFormat.PLAIN -> ConceptKeyDeserializer(type)
+            ConceptKeyFormat.EMBEDDED_JSON -> EmbeddedConceptKeyDeserializer(type)
+        }
+    }
 }
