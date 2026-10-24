@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
-    kotlin("jvm") version "2.4.20" apply false
+    kotlin("jvm") version "2.4.21" apply false
     id("com.vanniktech.maven.publish") version "0.37.0" apply false
     id("com.github.ben-manes.versions") version "0.64.0"
     id("se.patrikerdes.use-latest-versions") version "0.2.19"
