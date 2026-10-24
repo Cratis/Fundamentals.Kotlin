@@ -122,6 +122,38 @@ public final class io/cratis/fundamentals/execution/CorrelationId$Companion {
 	public final fun create ()Lio/cratis/fundamentals/execution/CorrelationId;
 }
 
+public abstract interface annotation class io/cratis/fundamentals/serialization/DerivedType : java/lang/annotation/Annotation {
+	public abstract fun targetType ()Ljava/lang/Class;
+	public abstract fun value ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/serialization/DerivedTypeId : io/cratis/fundamentals/concepts/ConceptAs {
+	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public synthetic fun value ()Ljava/lang/Object;
+	public fun value ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/serialization/DerivedTypes {
+	public static final field Companion Lio/cratis/fundamentals/serialization/DerivedTypes$Companion;
+	public static final field EMPTY Lio/cratis/fundamentals/serialization/DerivedTypes;
+	public synthetic fun <init> (Ljava/util/Map;Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun derivedTypeFor (Ljava/lang/Class;Lio/cratis/fundamentals/serialization/DerivedTypeId;)Ljava/lang/Class;
+	public final fun getTypesWithDerivatives ()Ljava/util/Set;
+	public final fun hasDerivatives (Ljava/lang/Class;)Z
+	public final fun isDerivedType (Ljava/lang/Class;)Z
+	public static final fun of (Ljava/lang/Iterable;)Lio/cratis/fundamentals/serialization/DerivedTypes;
+	public static final fun of ([Ljava/lang/Class;)Lio/cratis/fundamentals/serialization/DerivedTypes;
+	public final fun targetTypeFor (Ljava/lang/Class;)Ljava/lang/Class;
+}
+
+public final class io/cratis/fundamentals/serialization/DerivedTypes$Companion {
+	public final fun of (Ljava/lang/Iterable;)Lio/cratis/fundamentals/serialization/DerivedTypes;
+	public final fun of ([Ljava/lang/Class;)Lio/cratis/fundamentals/serialization/DerivedTypes;
+}
+
 public final class io/cratis/fundamentals/strings/StringExtensions {
 	public static final fun toCamelCase (Ljava/lang/String;)Ljava/lang/String;
 	public static final fun toPascalCase (Ljava/lang/String;)Ljava/lang/String;

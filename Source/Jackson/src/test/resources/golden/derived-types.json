@@ -1,0 +1,89 @@
+{
+  "revision": "f87af60265a2e59bd9b7435b0386ee06cb6d646a",
+  "sourceRoot": "Source/DotNET/Fundamentals",
+  "provenance": "Hand-derived from pinned source/specifications, not a live .NET oracle",
+  "cases": [
+    {
+      "name": "known_derived_type", "declared": "ITargetType", "registers": ["Known"], "direction": "both",
+      "json": {"someValue":42,"_derivedTypeId":"my-derived-type"},
+      "source": "Serialization/DerivedTypeJsonConverter.cs:58-92; Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_serializing_known_derived_type.cs:11-16,42"
+    },
+    {
+      "name": "id_first", "declared": "ITargetType", "registers": ["Known"], "direction": "read",
+      "json": {"_derivedTypeId":"my-derived-type","someValue":42},
+      "source": "Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_deserializing_for_known_derived_type.cs:13,37-38 (someValue cased for JVM)"
+    },
+    {
+      "name": "missing_id", "declared": "IParent", "registers": ["Parent","Child"], "direction": "null",
+      "json": {},
+      "source": "Serialization/DerivedTypeJsonConverter.cs:40-47; Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_deserializing_with_missing_derived_type_id_property.cs:24,28"
+    },
+    {
+      "name": "differently_cased_id", "declared": "IChild", "registers": ["Child"], "direction": "null",
+      "json": {"_DerivedTypeId":"child","someValue":"x"},
+      "source": "Serialization/DerivedTypeJsonConverter.cs:40,47 (case-sensitive property lookup)"
+    },
+    {
+      "name": "json_null", "declared": "IParent", "registers": ["Parent","Child"], "direction": "null",
+      "json": null,
+      "source": "STJ runtime null handling, outside the Fundamentals pin"
+    },
+    {
+      "name": "direct_nested", "declared": "IParent", "registers": ["Parent","Child"], "direction": "both",
+      "json": {"child":{"someValue":"nested","_derivedTypeId":"child"},"_derivedTypeId":"parent"},
+      "source": "Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_serializing_with_default_naming_policy.cs:13,17; when_serializing_with_camel_case_naming_policy.cs:21; when_serializing/and_deserializing_a_direct_nested_family.cs:13-17"
+    },
+    {
+      "name": "null_entry", "declared": "IParent", "registers": ["Parent","Child"], "direction": "both",
+      "json": {"child":null,"_derivedTypeId":"parent"},
+      "source": "Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_serializing_a_null_entry.cs:13,17"
+    },
+    {
+      "name": "recursive", "declared": "INode", "registers": ["Node"], "direction": "both",
+      "json": {"name":"root","child":{"name":"branch","child":{"name":"leaf","child":null,"_derivedTypeId":"node"},"_derivedTypeId":"node"},"_derivedTypeId":"node"},
+      "source": "Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_serializing_a_recursive_family.cs:13,17-18; when_serializing/and_deserializing_a_recursive_family.cs:13-17; when_serializing_a_null_entry.cs:17"
+    },
+    {
+      "name": "list_children", "declared": "IParent", "registers": ["ListParent","Child"], "direction": "both",
+      "json": {"children":[{"someValue":"nested","_derivedTypeId":"child"}],"_derivedTypeId":"parent"},
+      "source": "Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_serializing_a_collection_of_nested_family_values.cs:17; when_serializing_an_enumerable_of_nested_family_values.cs:17; when_serializing_a_read_only_list_of_nested_family_values.cs:17"
+    },
+    {
+      "name": "array_children", "declared": "IParent", "registers": ["ArrayParent","Child"], "direction": "both",
+      "json": {"children":[{"someValue":"nested","_derivedTypeId":"child"}],"_derivedTypeId":"parent"},
+      "source": "Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_serializing_an_array_of_nested_family_values.cs:17; when_serializing_a_covariant_array_of_nested_family_values.cs:20"
+    },
+    {
+      "name": "map_children", "declared": "IParent", "registers": ["MapParent","Child"], "direction": "both",
+      "json": {"children":{"nested":{"someValue":"value","_derivedTypeId":"child"}},"_derivedTypeId":"parent"},
+      "source": "Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_serializing_a_dictionary_of_nested_family_values.cs:17; when_serializing_a_read_only_dictionary_of_nested_family_values.cs:17"
+    },
+    {
+      "name": "map_of_lists", "declared": "IParent", "registers": ["MapOfListsParent","Child"], "direction": "both",
+      "json": {"children":{"nested":[{"someValue":"value","_derivedTypeId":"child"}]},"_derivedTypeId":"parent"},
+      "source": "Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_serializing_a_dictionary_of_nested_family_enumerables.cs:17"
+    },
+    {
+      "name": "nested_lists", "declared": "IParent", "registers": ["NestedParent","Child"], "direction": "both",
+      "json": {"children":[[{"someValue":"nested","_derivedTypeId":"child"}]],"_derivedTypeId":"parent"},
+      "source": "Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/when_serializing_nested_enumerables_of_family_values.cs:17; when_serializing_nested_arrays_of_family_values.cs:20"
+    },
+    {
+      "name": "unknown_id", "declared": "IParent", "registers": ["Parent","Child"], "direction": "reject",
+      "json": {"_derivedTypeId":"unknown"},
+      "source": "Serialization/DerivedTypes.cs:78-85; Fundamentals.Specs/Serialization/for_DerivedTypes/when_getting_derived_type_without_any_matching_derived_type_identifier.cs:20-22"
+    },
+    {
+      "name": "non_string_id", "declared": "IParent", "registers": ["Parent","Child"], "direction": "reject",
+      "json": {"_derivedTypeId":42}, "source": "Serialization/DerivedTypeJsonConverter.cs:42"
+    },
+    {
+      "name": "null_id", "declared": "IParent", "registers": ["Parent","Child"], "direction": "reject",
+      "json": {"_derivedTypeId":null}, "source": "Serialization/DerivedTypeJsonConverter.cs:42-43; Serialization/DerivedTypes.cs:80-82"
+    },
+    {
+      "name": "array_value", "declared": "IParent", "registers": ["Parent","Child"], "direction": "reject",
+      "json": [], "source": "Serialization/DerivedTypeJsonConverter.cs:40"
+    }
+  ]
+}

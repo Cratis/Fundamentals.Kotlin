@@ -31,6 +31,8 @@ Construction lives in core `ConceptDescriptor`, in this order: record canonical 
 
 Concept map keys default to underlying text; opt-in ConceptsModule(ConceptKeyFormat.EMBEDDED_JSON) writes embedded JSON and reads JSON first, then plain text. EnumModule is opt-in ordinal enum values with lenient defined-value reads; enum map keys stay names. TimeSpanModule is opt-in Duration "c" values/keys truncated to 100 ns, with canonical and ISO-8601 reads. BigDecimal is plain notation. Whole floats/exponents, Unicode escaping, signed bytes, numeric ranges and timestamp precision differ from .NET; keep direction-specific fixtures and the ledger honest rather than normalizing unrelated Jackson behavior globally. Fallback delegation does not create a parity guarantee. Concept list null elements are kept (C# drops them).
 
+Derived types use an explicit immutable registry with no scanning; opt-in DerivedTypesModule owns `_derivedTypeId`. Combine registrations into one registry/module per mapper (a second module replaces rather than merges).
+
 ## Testing and API compatibility
 
 Use JUnit Jupiter (`org.junit.jupiter.*`, currently 6.1.3); use parameterized tests, descriptive Kotlin backtick names, ordinary Java tests, explicit assertions and small private fixture types. No MockK dependency is needed. Do not import .NET testing conventions: no `given` inheritance trees, `Establish` / `Because` / `It` fields, per-assertion files, C# spec-folder layouts or assertion-framework substitutions.
