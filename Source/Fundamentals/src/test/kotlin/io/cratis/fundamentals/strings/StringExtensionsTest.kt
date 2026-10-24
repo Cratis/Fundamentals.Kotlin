@@ -30,7 +30,9 @@ class StringExtensionsTest {
         fun cases(): List<Arguments> = checkNotNull(
             StringExtensionsTest::class.java.getResourceAsStream("/strings/case.json")
         ).use { stream ->
-            JsonMapper.builder().build().readTree(stream).get("cases").map { row ->
+            val rows = JsonMapper.builder().build().readTree(stream).get("cases")
+            (0 until rows.size()).map { index ->
+                val row = rows.get(index)
                 Arguments.of(row.get("input").asString(), row.get("camel").asString(), row.get("pascal").asString())
             }
         }

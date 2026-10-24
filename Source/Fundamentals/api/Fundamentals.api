@@ -1,0 +1,37 @@
+public abstract interface class io/cratis/fundamentals/concepts/ConceptAs {
+	public static final field Companion Lio/cratis/fundamentals/concepts/ConceptAs$Companion;
+	public static fun isConcept (Ljava/lang/Class;)Z
+	public abstract fun value ()Ljava/lang/Object;
+	public static fun valueTypeOf (Ljava/lang/Class;)Ljava/lang/Class;
+}
+
+public final class io/cratis/fundamentals/concepts/ConceptAs$Companion {
+	public final fun isConcept (Ljava/lang/Class;)Z
+	public final fun valueTypeOf (Ljava/lang/Class;)Ljava/lang/Class;
+}
+
+public final class io/cratis/fundamentals/concepts/ConceptAsKt {
+	public static final synthetic fun getValue (Lio/cratis/fundamentals/concepts/ConceptAs;)Ljava/lang/Object;
+}
+
+public final class io/cratis/fundamentals/execution/CorrelationId : io/cratis/fundamentals/concepts/ConceptAs {
+	public static final field Companion Lio/cratis/fundamentals/execution/CorrelationId$Companion;
+	public static final field NOT_SET Lio/cratis/fundamentals/execution/CorrelationId;
+	public fun <init> (Ljava/util/UUID;)V
+	public static final fun create ()Lio/cratis/fundamentals/execution/CorrelationId;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public synthetic fun value ()Ljava/lang/Object;
+	public fun value ()Ljava/util/UUID;
+}
+
+public final class io/cratis/fundamentals/execution/CorrelationId$Companion {
+	public final fun create ()Lio/cratis/fundamentals/execution/CorrelationId;
+}
+
+public final class io/cratis/fundamentals/strings/StringExtensions {
+	public static final fun toCamelCase (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun toPascalCase (Ljava/lang/String;)Ljava/lang/String;
+}
+
