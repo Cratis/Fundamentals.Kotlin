@@ -4,7 +4,10 @@
 package io.cratis.fundamentals.concepts
 
 import java.nio.ByteBuffer
+import java.math.BigInteger
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.Base64
 import java.util.HexFormat
 import java.util.UUID
@@ -12,6 +15,8 @@ import java.util.UUID
 /** Generates values using cryptographically secure randomness. */
 public object GenerateValue {
     private const val DEFAULT_NANO_ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"
+    private val patterns = GenerationCache<Pair<String, Checksum>, GenerationPattern>()
+    private val supports = GenerationCache<Triple<String, Checksum, LocalDate?>, GenerationPatternSupport>()
 
     /** Creates an RFC version 4 UUID with the RFC variant. */
     @JvmStatic
@@ -64,9 +69,7 @@ public object GenerateValue {
     @JvmOverloads
     public fun nanoId(size: Int = 21, alphabet: String = DEFAULT_NANO_ID_ALPHABET): String {
         if (size !in 1..256) throw GenerationErrors.nanoIdSize(size)
-        if (alphabet.length !in 2..256) throw GenerationErrors.nanoIdAlphabet()
-        if (alphabet.any { it !in ' '..'~' }) throw GenerationErrors.nanoIdAlphabet()
-        if (alphabet.toSet().size != alphabet.length) throw GenerationErrors.nanoIdAlphabet()
+        validateNanoIdAlphabet(alphabet)
         return CharArray(size) { alphabet[GenerationRandom.source.nextInt(alphabet.length)] }.concatToString()
     }
 
@@ -96,6 +99,34 @@ public object GenerateValue {
         return (minimum.toULong() + if (span == 0uL) random else random % span).toLong()
     }
 
+    /** Samples uniformly over distinct payloads with an emittable checksum. */
+    @JvmStatic
+    @JvmOverloads
+    public fun pattern(pattern: String, checksum: Checksum = Checksum.NONE): String =
+        samplePattern(pattern, null, checksum)
+
+    /** Samples a pattern with all date segments captured from the operation's UTC date. */
+    @JvmStatic
+    @JvmOverloads
+    public fun pattern(pattern: String, context: GenerationContext, checksum: Checksum = Checksum.NONE): String {
+        if (context.now == GenerationContext.MISSING_TIME) throw GenerationErrors.missingTime()
+        return samplePattern(pattern, context.now.atOffset(ZoneOffset.UTC).toLocalDate(), checksum)
+    }
+
+    /** Validates the exact trailing checksum over the payload's ASCII digits. */
+    @JvmStatic
+    public fun hasValidChecksum(value: String, checksum: Checksum): Boolean =
+        GenerationChecksum.matches(value, checksum)
+
+    private fun samplePattern(text: String, date: LocalDate?, checksum: Checksum): String {
+        val pattern = patterns.get(text to checksum) { GenerationPattern.parse(it.first, it.second) }
+        if (pattern.hasDates && date == null) throw GenerationErrors.requiresContext(pattern)
+        val key = Triple(text, checksum, if (pattern.hasDates) date else null)
+        val support = supports.get(key) { GenerationPatternSupport(pattern, it.third) }
+        if (support.count == BigInteger.ZERO) throw GenerationErrors.emptySupport(pattern)
+        return support.unrank(GenerationIndex.draw(support.count))
+    }
+
     private fun timestampBytes(context: GenerationContext): ByteArray {
         val bytes = ByteArray(16).also(GenerationRandom.source::nextBytes)
         val timestamp = context.now.toEpochMilli()
@@ -103,11 +134,23 @@ public object GenerateValue {
         return bytes
     }
 
+    private fun validateNanoIdAlphabet(alphabet: String) {
+        if (alphabet.length !in 2..256) throw GenerationErrors.nanoIdAlphabet()
+        if (alphabet.any { it !in ' '..'~' }) throw GenerationErrors.nanoIdAlphabet()
+        if (alphabet.toSet().size != alphabet.length) throw GenerationErrors.nanoIdAlphabet()
+    }
+
     private fun validateTypeIdPrefix(prefix: String) {
         if (prefix.length > 63) throw GenerationErrors.typeIdPrefix(prefix)
         if (prefix.isEmpty()) return
+        validateTypeIdBoundaries(prefix)
+        if (prefix.any { !isTypeIdCharacter(it) }) throw GenerationErrors.typeIdPrefix(prefix)
+    }
+
+    private fun isTypeIdCharacter(character: Char): Boolean = character in 'a'..'z' || character == '_'
+
+    private fun validateTypeIdBoundaries(prefix: String) {
         if (prefix.first() !in 'a'..'z') throw GenerationErrors.typeIdPrefix(prefix)
         if (prefix.last() !in 'a'..'z') throw GenerationErrors.typeIdPrefix(prefix)
-        if (prefix.any { it !in 'a'..'z' && it != '_' }) throw GenerationErrors.typeIdPrefix(prefix)
     }
 }

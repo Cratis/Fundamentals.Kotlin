@@ -4,7 +4,6 @@
 package io.cratis.fundamentals.concepts
 
 import java.time.Instant
-import java.time.ZoneOffset
 
 /** The operation's captured time and portable tenant identifier. */
 public class GenerationContext @JvmOverloads public constructor(
@@ -12,7 +11,7 @@ public class GenerationContext @JvmOverloads public constructor(
     public val tenant: String = DEFAULT_TENANT,
 ) {
     init {
-        if (now.atOffset(ZoneOffset.UTC).year !in 1..9999) throw GenerationErrors.yearRange(now)
+        if (now < MISSING_TIME || now >= EXCLUSIVE_END) throw GenerationErrors.yearRange(now)
     }
 
     public override fun equals(other: Any?): Boolean =
@@ -27,6 +26,7 @@ public class GenerationContext @JvmOverloads public constructor(
         public const val DEFAULT_TENANT: String = "00000000-0000-0000-0000-000000000000"
 
         internal val MISSING_TIME: Instant = Instant.parse("0001-01-01T00:00:00Z")
+        private val EXCLUSIVE_END: Instant = Instant.parse("+10000-01-01T00:00:00Z")
     }
 }
 

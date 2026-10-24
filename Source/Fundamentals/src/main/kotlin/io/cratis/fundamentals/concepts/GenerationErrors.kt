@@ -6,6 +6,18 @@ package io.cratis.fundamentals.concepts
 import java.time.Instant
 
 internal object GenerationErrors {
+    fun invalidPattern(pattern: String, reason: String): IllegalArgumentException =
+        IllegalArgumentException("Invalid value pattern '$pattern': $reason")
+
+    fun unknownChecksum(checksum: Checksum): IllegalArgumentException =
+        IllegalArgumentException("Checksum '$checksum' is not a supported checksum algorithm for this operation.")
+
+    fun emptySupport(pattern: GenerationPattern): IllegalArgumentException =
+        IllegalArgumentException("Value pattern '${pattern.text}' has no values with an emittable check digit.")
+
+    fun requiresContext(pattern: GenerationPattern): IllegalArgumentException =
+        IllegalArgumentException("Value pattern '${pattern.text}' requires a generation context for its UTC date segments.")
+
     fun integerRange(minimum: Long, maximum: Long): IllegalArgumentException =
         IllegalArgumentException("Integer generation minimum '$minimum' exceeds maximum '$maximum'.")
 

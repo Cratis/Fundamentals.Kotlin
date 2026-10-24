@@ -63,11 +63,13 @@ class GenerateValueTimeOrderedStringsTest {
     @ValueSource(strings = ["User", "_user", "user_", "us-er", "user1", "user\n"])
     fun `type id rejects invalid prefixes`(prefix: String) {
         assertThrows(IllegalArgumentException::class.java) { GenerateValue.typeId(prefix) }
+        assertThrows(IllegalArgumentException::class.java) { GenerateValue.typeId(prefix, context) }
     }
 
     @Test
     fun `type id validates prefix length and permits valid boundaries`() {
         assertThrows(IllegalArgumentException::class.java) { GenerateValue.typeId("a".repeat(64)) }
+        assertThrows(IllegalArgumentException::class.java) { GenerateValue.typeId("a".repeat(64), context) }
         listOf("a", "a_b", "a" + "_".repeat(61) + "z").forEach {
             assertTrue(GenerateValue.typeId(it).startsWith(it + "_"))
         }

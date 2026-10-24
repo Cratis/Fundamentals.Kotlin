@@ -24,6 +24,13 @@ class GenerationContextTest {
         assertEquals("GenerationContext(now=1970-01-01T00:00:00Z, tenant=${context.tenant})", context.toString())
     }
 
+    @Test
+    fun `extreme instants are rejected without overflowing date conversion`() {
+        listOf(Instant.MIN, Instant.MAX).forEach {
+            assertThrows(IllegalArgumentException::class.java) { GenerationContext(it) }
+        }
+    }
+
     @ParameterizedTest
     @ValueSource(strings = ["+10000-01-01T00:00:00Z", "0000-12-31T23:59:59Z"])
     fun `rejects years outside the C sharp range`(value: String) {

@@ -35,6 +35,26 @@ final class GenerateValueJavaTest {
     }
 
     @Test
+    void patternsAndChecksumStaticsAreJavaFriendly() {
+        var context = new GenerationContext(Instant.EPOCH);
+        assertEquals(1, GenerateValue.pattern("#").length());
+        assertEquals(2, GenerateValue.pattern("#", Checksum.LUHN).length());
+        assertTrue(GenerateValue.pattern("{yyyy}#", context).startsWith("1970"));
+        var value = GenerateValue.pattern("{yyyy}#", context, Checksum.LUHN);
+        assertTrue(Checksum.hasValidChecksum(value, Checksum.LUHN));
+        assertTrue(Checksum.hasValidChecksum("79927398713", Checksum.LUHN));
+        assertTrue(GenerateValue.hasValidChecksum("79927398713", Checksum.LUHN));
+        for (var checksum : Checksum.values()) {
+            assertEquals(checksum, Checksum.valueOf(checksum.name()));
+        }
+        assertThrows(IllegalArgumentException.class, () -> Checksum.hasValidChecksum("0", Checksum.NONE));
+        assertThrows(IllegalArgumentException.class, () -> GenerateValue.hasValidChecksum("0", Checksum.NONE));
+        assertThrows(NullPointerException.class, () -> Checksum.hasValidChecksum(null, Checksum.LUHN));
+        assertThrows(NullPointerException.class, () -> GenerateValue.hasValidChecksum(null, Checksum.LUHN));
+        assertThrows(NullPointerException.class, () -> GenerateValue.pattern(null));
+    }
+
+    @Test
     void nullArgumentsAreRejected() {
         assertThrows(NullPointerException.class, () -> new GenerationContext(null, "t"));
         assertThrows(NullPointerException.class, () -> new GenerationContext(Instant.EPOCH, null));

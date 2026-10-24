@@ -28,6 +28,18 @@ class GenerateValueUuidTest {
     }
 
     @Test
+    fun `uuid v7 observes a later millisecond and sorts it after the earlier value`() {
+        val earlier = GenerateValue.uuidV7()
+        var later = earlier
+        for (attempt in 0 until 1_000_000) {
+            later = GenerateValue.uuidV7()
+            if (later.mostSignificantBits ushr 16 > earlier.mostSignificantBits ushr 16) break
+        }
+        assertTrue(later.mostSignificantBits ushr 16 > earlier.mostSignificantBits ushr 16)
+        assertTrue(later.toString() > earlier.toString())
+    }
+
+    @Test
     fun `uuid v7 in context preserves UTC milliseconds including epoch`() {
         val instant = OffsetDateTime.parse("2024-06-15T12:34:56.789+02:00").toInstant()
         val context = GenerationContext(instant, "tenant-a")
