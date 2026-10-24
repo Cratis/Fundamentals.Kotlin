@@ -3,7 +3,7 @@
 
 # Cratis Fundamentals for Kotlin and Java
 
-Shared domain primitives for JVM applications: typed concepts, correlation identifiers, .NET-compatible name casing and an optional Jackson 3 concept module. This is a small v1 surface, **not full .NET Fundamentals parity**. See the [parity ledger](Documentation/parity.md) for exact source pins, evidence, differences and follow-up work.
+Shared domain primitives for JVM applications: typed concepts, correlation identifiers, .NET-compatible name casing and an optional Jackson 3 concept module. The surface includes generated values and patterns/checksums, **not full .NET Fundamentals parity**. See the [parity ledger](Documentation/parity.md) for exact source pins, evidence, differences and follow-up work.
 
 ## Requirements and artifacts
 
@@ -90,6 +90,71 @@ public final class Example {
 
 A Java record's component must be boxed for generic primitive values: `Integer value`, not `int value`. There is only one required interface method, `value()`. Equality, hashing, comparison, validation, null rejection and display behavior belong to the implementation. Kotlin data classes and Java records supply value equality naturally.
 
+## Generated values
+
+Available in the core artifact, without Jackson. Kotlin and Java share static generators for UUID v4/v7, ULID, TypeID, NanoID, encoded random bytes and inclusive 64-bit integers. Randomness is cryptographically secure; UUID v7 and ULID do not use a monotonic counter.
+
+```kotlin
+import io.cratis.fundamentals.concepts.*
+import java.time.Instant
+import java.util.UUID
+
+class SomeId(private val id: UUID) : ConceptAs<UUID>, Generatable<SomeId> {
+    override fun value(): UUID = id
+    companion object {
+        @JvmStatic fun create(): SomeId = SomeId(GenerateValue.uuid())
+    }
+}
+
+class OrderId(private val id: String) : ConceptAs<String>, GeneratableInContext<OrderId> {
+    override fun value(): String = id
+    companion object {
+        @JvmStatic fun create(context: GenerationContext): OrderId =
+            OrderId(GenerateValue.typeId("order", context))
+    }
+}
+
+fun generatedValues() {
+    val context = GenerationContext(Instant.parse("2024-02-29T10:00:00Z"), "tenant-a")
+    val request = SomeId.create()
+    val order = OrderId.create(context)
+    check(request.value().version() == 4)
+    check(order.value().startsWith("order_"))
+    val invoice = GenerateValue.pattern("INV-{yyyy}-#{7}", context, Checksum.LUHN)
+    check(Checksum.hasValidChecksum(invoice, Checksum.LUHN))
+}
+```
+
+```java
+import io.cratis.fundamentals.concepts.*;
+import java.time.Instant;
+import java.util.UUID;
+
+class GeneratedValuesExample {
+    record SomeId(UUID value) implements ConceptAs<UUID>, Generatable<SomeId> {
+        public static SomeId create() { return new SomeId(GenerateValue.uuid()); }
+    }
+    record OrderId(String value) implements ConceptAs<String>, GeneratableInContext<OrderId> {
+        public static OrderId create(GenerationContext context) {
+            return new OrderId(GenerateValue.typeId("order", context));
+        }
+    }
+    public static void main(String[] args) {
+        var context = new GenerationContext(Instant.parse("2024-02-29T10:00:00Z"), "tenant-a");
+        var request = SomeId.create();
+        var order = OrderId.create(context);
+        var invoice = GenerateValue.pattern("INV-{yyyy}-#{7}", context, Checksum.LUHN);
+        if (!GenerateValue.hasValidChecksum(invoice, Checksum.LUHN)) throw new AssertionError();
+    }
+}
+```
+
+`Generatable` and `GeneratableInContext` are memberless markers: JVM interfaces cannot enforce static factories. The `create` convention must be supplied by each concept. `GenerationContext` captures one UTC instant and a portable tenant string (default: zero UUID); built-in generators do not incorporate the tenant. UTC years must be 1–9999. Year 1 midnight is the missing-time sentinel; Unix epoch is valid.
+
+Patterns support `#` (digit), `?` (uppercase letter), `*` (digit/uppercase), sorted distinct classes such as `[A-HJ-NP-Z2-9]`, escapes, `{n}` / `{m,n}` repeats, and captured UTC `{yyyy}`, `{yy}`, `{MM}`, `{dd}` segments. For example, `GenerateValue.pattern("ORD-[A-HJ-NP-Z2-9]{4}-#{4,6}")`. They sample uniformly over distinct strings, not derivations or lengths. Checksum choices are `NONE`, `LUHN`, `MOD11`, `MOD97`; Mod11 excludes payloads requiring a check digit of 10. Validation requires the exact numeric suffix and rejects `NONE`. Date patterns can use pre-epoch dates; UUID v7, ULID and TypeID cannot.
+
+Patterns are limited to 256 final characters (including check digits), repeat bounds 1–64, 2,048 automaton positions, 10,000 DFA/product states and 100,000,000 construction operations. Parsed patterns and counted supports use separate 128-entry caches. Exhausted budgets and invalid input fail with `IllegalArgumentException`; there is no biased fallback. Java null arguments fail at Kotlin's non-null boundary. See [exception mappings and vector evidence](Documentation/parity.md#generated-value-exception-mapping).
+
 ## Jackson registration and construction
 
 Use explicit `addModule(new ConceptsModule())` in Java or `addModule(ConceptsModule())` in Kotlin. Alternatively:
@@ -124,7 +189,7 @@ Every PR needs exactly one release-intent label: `major`, `minor`, `patch`, or `
 
 ## Scope
 
-Generated values, generation patterns/checksums, general ConceptMap/ConceptFactory APIs, temporal/collection converter parity, derived types, ambient correlation access and the broader Fundamentals library are not implemented. Their follow-up issues are linked in the [ledger](Documentation/parity.md#surfaces).
+General ConceptMap/ConceptFactory APIs, temporal/collection converter parity, derived types, ambient correlation access and the broader Fundamentals library are not implemented. Their follow-up issues are linked in the [ledger](Documentation/parity.md#surfaces).
 
 Arc.Kotlin still owns its existing `io.cratis.arc.concepts` and JSON code and has no dependency on these artifacts yet. Extraction is a separate change; this repository does not silently re-export or replace Arc's types.
 

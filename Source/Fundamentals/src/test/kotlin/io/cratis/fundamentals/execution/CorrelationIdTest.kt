@@ -4,6 +4,8 @@
 package io.cratis.fundamentals.execution
 
 import io.cratis.fundamentals.concepts.ConceptAs
+import io.cratis.fundamentals.concepts.Generatable
+import org.junit.jupiter.api.Assertions.assertInstanceOf
 import java.util.UUID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
@@ -21,6 +23,7 @@ class CorrelationIdTest {
     fun `new generates distinct nonzero version four uuids`() {
         val first = CorrelationId.create()
         val second = CorrelationId.create()
+        assertInstanceOf(Generatable::class.java, first)
         assertNotEquals(CorrelationId.NOT_SET, first)
         assertNotEquals(first, second)
         assertEquals(4, first.value().version())

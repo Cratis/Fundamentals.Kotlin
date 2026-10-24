@@ -4,10 +4,12 @@
 package io.cratis.fundamentals.execution
 
 import io.cratis.fundamentals.concepts.ConceptAs
+import io.cratis.fundamentals.concepts.Generatable
+import io.cratis.fundamentals.concepts.GenerateValue
 import java.util.UUID
 
 /** An immutable correlation identifier backed by a UUID. */
-public class CorrelationId(private val id: UUID) : ConceptAs<UUID> {
+public class CorrelationId(private val id: UUID) : ConceptAs<UUID>, Generatable<CorrelationId> {
     public override fun value(): UUID = id
 
     public override fun equals(other: Any?): Boolean = other is CorrelationId && id == other.id
@@ -23,6 +25,6 @@ public class CorrelationId(private val id: UUID) : ConceptAs<UUID> {
 
         /** Generates a random UUID v4 identifier, matching .NET New(). */
         @JvmStatic
-        public fun create(): CorrelationId = CorrelationId(UUID.randomUUID())
+        public fun create(): CorrelationId = CorrelationId(GenerateValue.uuid())
     }
 }
