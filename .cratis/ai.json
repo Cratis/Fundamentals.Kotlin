@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/Cratis/.github/main/ai-instructions/manifest.json"
+    }
+  ],
+  "defaults": {
+    "language": "en"
+  },
+  "bootstrap": {
+    "enabled": true,
+    "intervalHours": 24,
+    "entrypoint": "bootstrap.md",
+    "stateFile": "bootstrap-state.json"
+  },
+  "root": {
+    "title": "Cratis Fundamentals Kotlin — AI instructions",
+    "description": "This repository uses centrally managed Cratis guidance. Project-specific rules are maintained in .cratis/ai/rules/project.md."
+  },
+  "projectOwned": {
+    "rules": [
+      ".cratis/ai/rules/project.md"
+    ],
+    "artifacts": [
+      "rules/project/**"
+    ]
+  },
+  "tools": {
+    "copilot": { "enabled": true },
+    "claude": { "enabled": true },
+    "cursor": { "enabled": true },
+    "windsurf": { "enabled": true },
+    "opencode": { "enabled": true }
+  }
+}
