@@ -6,6 +6,7 @@ package io.cratis.fundamentals.jackson
 import io.cratis.fundamentals.concepts.ConceptAs
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.util.UUID
 import tools.jackson.core.JsonGenerator
@@ -26,6 +27,7 @@ internal object ConceptValueSerializer : ValueSerializer<ConceptAs<*>>() {
             is BigDecimal -> generator.writeNumber(raw.toPlainString())
             is Boolean -> generator.writeBoolean(raw)
             is LocalDate -> generator.writeString(raw.toString())
+            is LocalTime -> generator.writeString(TemporalWireFormat.formatTime(raw))
             is OffsetDateTime -> generator.writeString(WIRE_OFFSET_DATE_TIME.format(raw))
             else -> serializers.writeValue(generator, raw)
         }

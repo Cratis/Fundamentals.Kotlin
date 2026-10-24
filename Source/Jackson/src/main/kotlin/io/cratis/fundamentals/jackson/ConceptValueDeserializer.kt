@@ -6,6 +6,7 @@ package io.cratis.fundamentals.jackson
 import io.cratis.fundamentals.concepts.ConceptAs
 import io.cratis.fundamentals.concepts.ConceptDescriptor
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 import java.util.UUID
@@ -33,6 +34,7 @@ internal class ConceptValueDeserializer(private val conceptType: JavaType) : Val
     private fun readValue(parser: JsonParser, context: DeserializationContext): Any? = when (valueType.rawClass) {
         UUID::class.java -> UUID.fromString(text(parser))
         LocalDate::class.java -> LocalDate.parse(text(parser))
+        LocalTime::class.java -> TemporalWireFormat.parseTime(text(parser))
         OffsetDateTime::class.java -> OffsetDateTime.parse(text(parser), ISO_OFFSET_DATE_TIME)
         else -> context.readValue<Any?>(parser, valueType)
     }

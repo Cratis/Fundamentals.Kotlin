@@ -1,0 +1,16 @@
+{
+  "authority": "Cratis/Fundamentals f87af60265a2e59bd9b7435b0386ee06cb6d646a",
+  "provenance": "Hand-derived from pinned source/specifications; not captured from a live .NET oracle. See temporal-collections.md.",
+  "cases": [
+    { "name": "date", "type": "date", "direction": "both", "json": "\"2024-01-15\"", "source": "Json/DateOnlyJsonConverter.cs Write; Fundamentals.Specs/Json/for_DateOnlyJsonConverter/when_writing.cs" },
+    { "name": "date_from_local_datetime", "type": "date", "direction": "read", "json": "\"2024-01-15T10:30:45\"", "source": "Json/DateOnlyJsonConverter.cs Read; Fundamentals.Specs/Json/for_DateOnlyJsonConverter/when_reading_date_time_without_offset.cs" },
+    { "name": "date_from_offset_datetime", "type": "date", "direction": "read", "json": "\"2024-01-15T23:30:45-04:00\"", "source": "Json/DateOnlyJsonConverter.cs Read; Fundamentals.Specs/Json/for_DateOnlyJsonConverter/when_reading_date_time_offset_with_offset.cs" },
+    { "name": "date_from_z_datetime", "type": "date", "direction": "read", "json": "\"2024-01-15T00:30:45Z\"", "source": "Json/DateOnlyJsonConverter.cs Read; Fundamentals.Specs/Json/for_DateOnlyJsonConverter/when_reading_date_time_offset.cs" },
+    { "name": "time", "type": "time", "direction": "both", "value": "10:30:45.1234567", "json": "\"10:30:45.1234567\"", "source": "Json/TimeOnlyJsonConverter.cs Write O; Fundamentals.Specs/Json/for_TimeOnlyJsonConverter/when_writing.cs" },
+    { "name": "time_zero", "type": "time", "direction": "both", "value": "10:30:00", "json": "\"10:30:00.0000000\"", "source": "Json/TimeOnlyJsonConverter.cs Write O" },
+    { "name": "time_short_read", "type": "time", "direction": "read", "value": "10:30:00", "json": "\"10:30\"", "source": "Json/TimeOnlyJsonConverter.cs Read TimeOnly.Parse (ISO subset)" },
+    { "name": "time_concept", "type": "timeConcept", "direction": "both", "value": "10:30:00", "json": "\"10:30:00.0000000\"", "source": "Json/ConceptAsJsonConverter.cs TimeOnly Write O" },
+    { "name": "int_list", "type": "intList", "direction": "both", "json": "[42]", "source": "Json/EnumerableConceptAsJsonConverter.cs Read/Write" },
+    { "name": "empty_list", "type": "emptyList", "direction": "both", "json": "[]", "source": "Json/EnumerableConceptAsJsonConverter.cs Read/Write" }
+  ]
+}
