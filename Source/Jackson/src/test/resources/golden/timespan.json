@@ -1,0 +1,21 @@
+{
+  "revision": "f87af60265a2e59bd9b7435b0386ee06cb6d646a",
+  "sourceRoot": "Source/DotNET/Fundamentals",
+  "provenance": "Hand-derived, not a live .NET oracle. TimeSpan wire authority: dotnet/runtime@v9.0.0 src/libraries/System.Text.Json/src/System/Text/Json/Serialization/Converters/Value/TimeSpanConverter.cs (STJ below). Fundamentals uses the built-in converter; Types/TypeConversion.cs:177-191 only describes CLR conversion.",
+  "cases": [
+    { "name": "whole", "shape": "plain", "type": "Duration", "direction": "both", "json": "\"01:30:00\"", "source": "STJ TimeSpanConverter.cs:54-85 ('c')" },
+    { "name": "zero", "shape": "plain", "type": "Duration", "direction": "both", "json": "\"00:00:00\"", "source": "STJ TimeSpanConverter.cs:77-85" },
+    { "name": "days", "shape": "plain", "type": "Duration", "direction": "both", "json": "\"1.02:03:04\"", "source": "STJ TimeSpanConverter.cs:77-85" },
+    { "name": "fraction", "shape": "plain", "type": "Duration", "direction": "both", "json": "\"01:30:00.1234567\"", "source": "STJ TimeSpanConverter.cs:77-85" },
+    { "name": "negative", "shape": "plain", "type": "Duration", "direction": "both", "json": "\"-01:30:00\"", "source": "STJ TimeSpanConverter.cs:54-85" },
+    { "name": "negative_fraction", "shape": "plain", "type": "Duration", "direction": "both", "json": "\"-00:00:00.0000001\"", "source": "STJ TimeSpanConverter.cs:54-85" },
+    { "name": "negative_days", "shape": "plain", "type": "Duration", "direction": "both", "json": "\"-2.00:00:00\"", "source": "STJ TimeSpanConverter.cs:54-85" },
+    { "name": "max", "shape": "plain", "type": "Duration", "direction": "both", "json": "\"10675199.02:48:05.4775807\"", "source": "STJ TimeSpanConverter.cs:54-85 (TimeSpan.MaxValue)" },
+    { "name": "short_fraction", "shape": "plain", "type": "Duration", "direction": "read", "json": "\"00:00:00.1\"", "source": "STJ TimeSpanConverter.cs:61-72 (Utf8Parser 'c')" },
+    { "name": "number_token", "shape": "plain", "type": "Duration", "direction": "reject", "json": "5400", "source": "STJ TimeSpanConverter.cs:19-22" },
+    { "name": "not_a_timespan", "shape": "plain", "type": "Duration", "direction": "reject", "json": "\"abc\"", "source": "STJ TimeSpanConverter.cs:54-72" },
+    { "name": "hours_out_of_range", "shape": "plain", "type": "Duration", "direction": "reject", "json": "\"24:00:00\"", "source": "STJ TimeSpanConverter.cs:61-72" },
+    { "name": "concept", "shape": "concept", "type": "SpanConcept", "direction": "both", "json": "\"01:30:00\"", "source": "Json/ConceptAsJsonConverter.cs:110,189-190; STJ TimeSpanConverter.cs:77-85" },
+    { "name": "key", "shape": "map", "type": "Duration", "direction": "both", "json": "{\"01:30:00\":1}", "source": "STJ TimeSpanConverter.cs:27-31,87-95; Json/ComplexKeyDictionaryJsonConverterFactory.cs:76" }
+  ]
+}
