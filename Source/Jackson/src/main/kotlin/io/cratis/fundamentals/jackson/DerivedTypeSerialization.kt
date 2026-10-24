@@ -16,16 +16,15 @@ import tools.jackson.databind.DatabindException
 import tools.jackson.databind.DeserializationConfig
 import tools.jackson.databind.DeserializationContext
 import tools.jackson.databind.JavaType
+import tools.jackson.databind.JsonNode
 import tools.jackson.databind.SerializationConfig
 import tools.jackson.databind.SerializationContext
 import tools.jackson.databind.ValueDeserializer
 import tools.jackson.databind.ValueSerializer
 import tools.jackson.databind.deser.ValueDeserializerModifier
 import tools.jackson.databind.deser.std.DelegatingDeserializer
-import tools.jackson.databind.json.JsonMapper
 import tools.jackson.databind.jsontype.TypeDeserializer
 import tools.jackson.databind.jsontype.TypeSerializer
-import tools.jackson.databind.node.ObjectNode
 import tools.jackson.databind.ser.ValueSerializerModifier
 import tools.jackson.databind.util.AccessPattern
 import tools.jackson.databind.util.TokenBuffer
@@ -74,21 +73,31 @@ private class DerivedTypeDeserializer(
 
     override fun deserialize(parser: JsonParser, context: DeserializationContext): Any? {
         if (parser.currentToken() == JsonToken.VALUE_NULL) return null
-        val node = context.readTree(parser) as? ObjectNode
-            ?: throw DatabindException.from(parser, "Expected an object for ${baseType.rawClass.name}")
-        val idNode = node.remove(DerivedTypesModule.DERIVED_TYPE_ID_PROPERTY) ?: return null
-        if (!idNode.isString) {
-            throw DatabindException.from(parser, "Expected textual derived type identifier '$idNode' for ${baseType.rawClass.name}")
+        if (parser.currentToken() != JsonToken.START_OBJECT) {
+            throw DatabindException.from(parser, "Expected an object for ${baseType.rawClass.name}")
         }
-        val id = idNode.stringValue()
+        return TokenBuffer.forBuffering(parser, context).use { body ->
+            var discriminator: JsonNode? = null
+            body.writeStartObject()
+            copyBodyFields(parser, body) { discriminator = context.readTree(it) }
+            body.writeEndObject()
+            val idNode = discriminator ?: return null
+            if (!idNode.isString) {
+                throw DatabindException.from(parser, "Expected textual derived type identifier '$idNode' for ${baseType.rawClass.name}")
+            }
+            deserializeBody(parser, context, body, idNode.stringValue())
+        }
+    }
+
+    private fun deserializeBody(parser: JsonParser, context: DeserializationContext, body: TokenBuffer, id: String): Any? {
         val targetType = specialize(context, parser, resolveId(parser, id))
         val target = context.findNonContextualValueDeserializer(targetType)
         // Consume only this wrapper's discriminator; nested values and third-party decorators retain their own handlers.
         val ordinary = if (target is DerivedTypeDeserializer) target._delegatee else target
         val contextual = context.handleSecondaryContextualization(ordinary, property, targetType)
-        return context.treeAsTokens(node).use { treeParser ->
-            treeParser.nextToken()
-            contextual.deserialize(treeParser, context)
+        return body.asParser(context, parser).use { bodyParser ->
+            bodyParser.nextToken()
+            contextual.deserialize(bodyParser, context)
         }
     }
 
@@ -134,24 +143,48 @@ private class DerivedTypeSerializer(
     }
 
     override fun serialize(value: Any, generator: JsonGenerator, context: SerializationContext) {
+        serializeBody(value, generator, context, null)
+    }
+
+    private fun serializeBody(value: Any, generator: JsonGenerator, context: SerializationContext, typeSerializer: TypeSerializer?) {
         if (missing) {
             throw DatabindException.from(generator, "${value.javaClass.name} carries @DerivedType('$id') but is not registered")
         }
-        val node = TokenBuffer(context, false).use { buffer ->
+        TokenBuffer(context, false).use { buffer ->
             delegate.serialize(value, buffer, context)
             buffer.asParser().use { parser ->
-                parser.nextToken()
-                JsonMapper.shared().readTree(parser) as? ObjectNode
-                    ?: throw DatabindException.from(generator, "Derived type ${value.javaClass.name}, id '$id', did not serialize as an object")
+                if (parser.nextToken() != JsonToken.START_OBJECT) {
+                    throw DatabindException.from(generator, "Derived type ${value.javaClass.name}, id '$id', did not serialize as an object")
+                }
+                TokenBuffer(context, generator.canWriteTypeId()).use { body ->
+                    val typeId = typeSerializer?.writeTypePrefix(body, context, typeSerializer.typeId(value, JsonToken.START_OBJECT))
+                    if (typeId == null) body.writeStartObject(value)
+                    copyBodyFields(parser, body) { it.skipChildren() }
+                    body.writeStringProperty(DerivedTypesModule.DERIVED_TYPE_ID_PROPERTY, id)
+                    if (typeId == null) body.writeEndObject() else typeSerializer.writeTypeSuffix(body, context, typeId)
+                    body.serialize(generator)
+                }
             }
         }
-        node.put(DerivedTypesModule.DERIVED_TYPE_ID_PROPERTY, id)
-        generator.objectWriteContext().writeTree(generator, node)
     }
 
     override fun serializeWithType(
         value: Any, generator: JsonGenerator, context: SerializationContext, typeSerializer: TypeSerializer
     ) {
-        serialize(value, generator, context)
+        serializeBody(value, generator, context, typeSerializer)
+    }
+}
+
+/** Copy only this object's fields. TokenBuffer retains deferred/exact numbers, including in nested values. */
+private fun copyBodyFields(parser: JsonParser, body: TokenBuffer, discriminator: (JsonParser) -> Unit) {
+    while (parser.nextToken() == JsonToken.PROPERTY_NAME) {
+        val name = parser.currentName()
+        parser.nextToken()
+        if (name == DerivedTypesModule.DERIVED_TYPE_ID_PROPERTY) {
+            discriminator(parser)
+        } else {
+            body.writeName(name)
+            body.copyCurrentStructure(parser)
+        }
     }
 }

@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonSetter
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.fasterxml.jackson.annotation.Nulls
 import io.cratis.fundamentals.concepts.ConceptAs
 import io.cratis.fundamentals.serialization.DerivedType
@@ -23,6 +25,8 @@ import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.SerializationFeature
 import tools.jackson.databind.json.JsonMapper
+import java.math.BigDecimal
+import java.math.BigInteger
 import java.time.Duration
 
 class DerivedTypesModuleTest {
@@ -83,6 +87,29 @@ class DerivedTypesModuleTest {
     }
     @DerivedType("scalar")
     class ScalarBody : ITargetType { @get:JsonValue val text = "scalar" }
+    data class DecimalAmount(private val amount: BigDecimal) : ConceptAs<BigDecimal> {
+        override fun value(): BigDecimal = amount
+    }
+    @DerivedType("precise")
+    data class Precise @JsonCreator constructor(
+        @param:JsonProperty("decimal") val decimal: BigDecimal,
+        @param:JsonProperty("concept") val concept: DecimalAmount,
+        @param:JsonProperty("integer") val integer: BigInteger
+    ) : ITargetType
+    @DerivedType("ordinary")
+    data class NonDecimal(
+        val number: Double, val single: Float, val enabled: Boolean, val text: String, val absent: String?
+    ) : ITargetType
+    @DerivedType("collision")
+    class DiscriminatorBody : ITargetType {
+        @get:JsonProperty("_derivedTypeId") val discriminator = "wrong"
+        val number = 42
+    }
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_ARRAY)
+    @JsonSubTypes(JsonSubTypes.Type(value = NativeBody::class, name = "native"))
+    interface NativeFamily
+    @DerivedType("native")
+    data class NativeBody @JsonCreator constructor(@param:JsonProperty("number") val number: Int) : NativeFamily
     class EmptyHolder {
         @JsonSetter(nulls = Nulls.AS_EMPTY) var value: Base? = Middle()
     }
@@ -264,6 +291,48 @@ class DerivedTypesModuleTest {
         val mapper = mapper(DerivedTypes.of(ScalarBody::class.java))
         val error = assertThrows(DatabindException::class.java) { mapper.writeValueAsString(ScalarBody()) }
         assertTrue(checkNotNull(error.message).contains("did not serialize as an object"))
+    }
+
+    @Test
+    fun `decimal properties concepts and oversized integers retain exact values and bytes`() {
+        val plain = JsonMapper.builder().addModule(ConceptsModule()).build()
+        val mapper = JsonMapper.builder().addModule(ConceptsModule())
+            .addModule(DerivedTypesModule(DerivedTypes.of(Precise::class.java))).build()
+        val decimal = BigDecimal("12345678901234567890.123456789")
+        val integer = BigInteger("1234567890123456789012345678901234567890")
+        val expected = Precise(decimal, DecimalAmount(decimal), integer)
+        val body = """{"decimal":12345678901234567890.123456789,"concept":12345678901234567890.123456789,"integer":1234567890123456789012345678901234567890}"""
+        val json = body.dropLast(1) + ""","_derivedTypeId":"precise"}"""
+        assertEquals(body, plain.writeValueAsString(expected))
+        assertEquals(json, mapper.writeValueAsString(expected))
+        assertEquals(expected, mapper.readValue(json, ITargetType::class.java))
+        val idFirst = """{"_derivedTypeId":"precise",""" + body.drop(1)
+        assertEquals(expected, mapper.readValue(idFirst, ITargetType::class.java))
+        assertEquals(expected, mapper.readValue(mapper.writeValueAsBytes(expected), ITargetType::class.java))
+        assertFalse(mapper.isEnabled(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS))
+    }
+
+    @Test
+    fun `non decimal body tokens keep ordinary Jackson bytes`() {
+        val plain = JsonMapper.builder().build()
+        val mapper = mapper(DerivedTypes.of(NonDecimal::class.java))
+        val value = NonDecimal(1.25e-17, 0.1f, true, "quoted \"text\" and \u00e6", null)
+        val expected = plain.writeValueAsString(value).dropLast(1) + ""","_derivedTypeId":"ordinary"}"""
+        assertArrayEquals(expected.toByteArray(Charsets.UTF_8), mapper.writeValueAsBytes(value))
+    }
+
+    @Test
+    fun `existing discriminator is replaced and moved after all body fields`() {
+        val mapper = mapper(DerivedTypes.of(DiscriminatorBody::class.java))
+        assertEquals("""{"number":42,"_derivedTypeId":"collision"}""", mapper.writeValueAsString(DiscriminatorBody()))
+    }
+
+    @Test
+    fun `native type serializer keeps its prefix and suffix around the derived body`() {
+        val mapper = mapper(DerivedTypes.of(NativeBody::class.java))
+        val expected = """["native",{"number":7,"_derivedTypeId":"native"}]"""
+        assertEquals(expected, mapper.writeValueAsString(NativeBody(7)))
+        assertEquals(NativeBody(7), mapper.readValue(expected, NativeFamily::class.java))
     }
 
     private fun mapper(registry: DerivedTypes): JsonMapper =
