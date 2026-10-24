@@ -1,0 +1,18 @@
+{
+  "revision": "f87af60265a2e59bd9b7435b0386ee06cb6d646a",
+  "sourceRoot": "Source/DotNET/Fundamentals",
+  "provenance": "Hand-derived from pinned source/specifications, not a live .NET oracle. See README.md.",
+  "cases": [
+    { "name": "number", "shape": "plain", "type": "Rank", "direction": "both", "json": "2", "source": "Json/EnumJson.cs:57-67; Json/EnumConverter.cs:24-33,50-53; Fundamentals.Specs/Json/for_EnumConverter/when_serializing_enum.cs; when_deserializing_from_number.cs" },
+    { "name": "name", "shape": "plain", "type": "Rank", "direction": "read", "json": "\"Three\"", "source": "Json/EnumConverter.cs:35-41; Fundamentals.Specs/Json/for_EnumConverter/when_deserializing_from_string.cs" },
+    { "name": "name_lowercase", "shape": "plain", "type": "Rank", "direction": "read", "json": "\"three\"", "source": "Json/EnumConverter.cs:38" },
+    { "name": "numeric_string", "shape": "plain", "type": "Rank", "direction": "read", "json": "\"2\"", "source": "Json/EnumConverter.cs:38 (Enum.TryParse accepts numeric text)" },
+    { "name": "unknown_number", "shape": "plain", "type": "Rank", "direction": "reject", "json": "42", "source": "Json/EnumConverter.cs:27-30,66-69; Fundamentals.Specs/Json/for_EnumConverter/when_deserializing_from_unknown_number.cs" },
+    { "name": "unknown_string", "shape": "plain", "type": "Rank", "direction": "reject", "json": "\"9b2f6c1e-0d6a-4c8e-9f3a-2b7d1e5c4a10\"", "source": "Json/EnumConverter.cs:43; Fundamentals.Specs/Json/for_EnumConverter/when_deserializing_from_unknown_string.cs (frozen GUID)" },
+    { "name": "array", "shape": "plain", "type": "Rank", "direction": "reject", "json": "[]", "source": "Json/EnumConverter.cs:46; Fundamentals.Specs/Json/for_EnumConverter/when_deserializing_from_array.cs" },
+    { "name": "object", "shape": "plain", "type": "Rank", "direction": "reject", "json": "{}", "source": "Json/EnumConverter.cs:46; Fundamentals.Specs/Json/for_EnumConverter/when_deserializing_from_object.cs" },
+    { "name": "fractional", "shape": "plain", "type": "Rank", "direction": "reject", "json": "1.5", "source": "Json/EnumJson.cs:26-38; Fundamentals.Specs/Json/for_EnumConverter/when_deserializing_a_fractional_number_for_a_long_backed_enum.cs" },
+    { "name": "concept_number", "shape": "concept", "type": "RankConcept", "direction": "both", "json": "2", "source": "Json/ConceptAsJsonConverter.cs:83-86,182-185" },
+    { "name": "concept_name", "shape": "concept", "type": "RankConcept", "direction": "read", "json": "\"Two\"", "source": "Json/ConceptAsJsonConverter.cs:96-101" }
+  ]
+}
