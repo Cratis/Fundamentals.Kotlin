@@ -4,6 +4,7 @@
 package io.cratis.fundamentals.jackson
 
 import io.cratis.fundamentals.concepts.ConceptAs
+import io.cratis.fundamentals.concepts.ConceptDescriptor
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -19,7 +20,7 @@ internal class ConceptKeyDeserializer(private val conceptType: JavaType) : KeyDe
         ?: throw IllegalArgumentException("${conceptType.rawClass.name} does not declare a ConceptAs value type")
 
     override fun deserializeKey(key: String, context: DeserializationContext): Any = try {
-        ConceptFactories.create(conceptType.rawClass, parseKey(key, context))
+        ConceptDescriptor.of(conceptType.rawClass).create(checkNotNull(parseKey(key, context)))
     } catch (exception: Exception) {
         throw DatabindException.from(context, "Could not create ${conceptType.rawClass.name} key: ${exception.message}", exception)
     }

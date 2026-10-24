@@ -4,6 +4,7 @@
 package io.cratis.fundamentals.jackson
 
 import io.cratis.fundamentals.concepts.ConceptAs
+import io.cratis.fundamentals.concepts.ConceptDescriptor
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
@@ -23,7 +24,7 @@ internal class ConceptValueDeserializer(private val conceptType: JavaType) : Val
         if (parser.currentToken() == JsonToken.VALUE_NULL) return null
         return try {
             val value = readValue(parser, context)
-            ConceptFactories.create(conceptType.rawClass, value)
+            ConceptDescriptor.of(conceptType.rawClass).create(checkNotNull(value))
         } catch (exception: Exception) {
             throw DatabindException.from(parser, "Could not create ${conceptType.rawClass.name}: ${exception.message}", exception)
         }

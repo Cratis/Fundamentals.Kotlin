@@ -27,6 +27,8 @@ final class FundamentalsJavaConformanceTest {
         assertEquals(uuid, new OrderId(uuid).value());
         assertTrue(ConceptAs.isConcept(OrderId.class));
         assertEquals(Integer.class, ConceptAs.valueTypeOf(Count.class));
+        assertEquals(new Count(42), io.cratis.fundamentals.concepts.ConceptFactory.create(Count.class, "42"));
+        assertEquals(UUID.class, io.cratis.fundamentals.concepts.ConceptDescriptor.of(OrderId.class).getValueType());
         assertEquals(new UUID(0L, 0L), CorrelationId.NOT_SET.value());
         assertNotEquals(CorrelationId.NOT_SET, CorrelationId.create());
         assertTrue(CorrelationId.create() instanceof Generatable<?>);
