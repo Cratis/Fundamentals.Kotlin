@@ -1,0 +1,85 @@
+# Copyright (c) Cratis. All rights reserved.
+# Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+name: Kotlin Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - "**"
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Workflow files are only ever executed by GitHub, so a defect in one surfaces at release time
+  # rather than at review time. Linting them here makes that a pull request failure instead.
+  lint-workflows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Pinned to an exact release and checksum-verified, so this trusts no third-party action and
+      # lints with the same binary contributors run locally.
+      - name: Install actionlint
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
+          ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+        run: |
+          set -euo pipefail
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl --fail --silent --show-error --location --output "${RUNNER_TEMP}/${archive}" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+          echo "${ACTIONLINT_SHA256}  ${RUNNER_TEMP}/${archive}" | sha256sum --check --strict -
+          tar --extract --gzip --file "${RUNNER_TEMP}/${archive}" --directory "${RUNNER_TEMP}" actionlint
+          rm -f "${RUNNER_TEMP}/${archive}"
+          echo "${RUNNER_TEMP}" >> "$GITHUB_PATH"
+
+      # shellcheck is preinstalled on the runner image; actionlint hands every `run:` script to it.
+      - name: Lint workflow files
+        run: actionlint -color
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Linux is case-sensitive, but contributors commonly use case-insensitive file systems.
+      - name: Check for paths that differ only by case
+        shell: bash
+        run: |
+          collisions=$(git ls-files | tr '[:upper:]' '[:lower:]' | sort | uniq -d)
+          if [ -n "$collisions" ]; then
+            echo "::error::Paths differing only by case cannot be checked out on a case-insensitive filesystem:"
+            echo "$collisions"
+            exit 1
+          fi
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Clean, build, and test the complete workspace
+        run: ./gradlew clean build --no-configuration-cache

@@ -1,0 +1,32 @@
+{
+  "copyright": "Copyright (c) Cratis. All rights reserved.",
+  "license": "Licensed under the MIT license. See LICENSE file in the project root for full license information.",
+  "revision": "f87af60265a2e59bd9b7435b0386ee06cb6d646a",
+  "sourceRoot": "Source/DotNET/",
+  "cases": [
+    {"name":"guid","json":"\"6f9619ff-8b86-d011-b42d-00c04fc964ff\"","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_guid_concept_{to,from}_json.cs; Guid.ToString D lowercase"},
+    {"name":"guid_upper","json":"\"6F9619FF-8B86-D011-B42D-00C04FC964FF\"","direction":"read","source":"hand-derived: Guid.Parse accepts uppercase; Fundamentals/Json/ConceptAsJsonConverter.cs Read string branch"},
+    {"name":"string","json":"\"hello\"","direction":"both","source":"Fundamentals/Json/ConceptAsJsonConverter.cs Write default branch / Read GetString"},
+    {"name":"int","json":"42","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_int_concept_{to,from}_json.cs"},
+    {"name":"int_max","json":"2147483647","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_int_backed_enum_concept_with_max_value_{to,from}_json.cs; same int branch"},
+    {"name":"int_min","json":"-2147483648","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_int_backed_enum_concept_with_min_value_{to,from}_json.cs; same int branch"},
+    {"name":"long","json":"42","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_long_concept_{to,from}_json.cs"},
+    {"name":"long_max","json":"9223372036854775807","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_long_backed_enum_concept_with_max_value_{to,from}_json.cs; same long branch"},
+    {"name":"long_min","json":"-9223372036854775808","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_long_backed_enum_concept_with_min_value_{to,from}_json.cs; same long branch"},
+    {"name":"short","json":"42","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_short_concept_{to,from}_json.cs"},
+    {"name":"short_max","json":"32767","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_short_backed_enum_concept_with_max_value_{to,from}_json.cs; same short branch"},
+    {"name":"byte","json":"42","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_byte_concept_{to,from}_json.cs; C# byte unsigned, JVM Byte signed"},
+    {"name":"double","json":"42.43","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_double_concept_{to,from}_json.cs"},
+    {"name":"double_whole","json":"42","direction":"read","source":"hand-derived: System.Text.Json writes whole Double as 42; Jackson writes 42.0 (deviation)"},
+    {"name":"double_exponent","json":"1E+100","direction":"read","source":"hand-derived: System.Text.Json exponent spelling; Jackson emits 1.0E100 (deviation)"},
+    {"name":"float","json":"42.43","direction":"both","source":"hand-derived: Fundamentals/Json/ConceptAsJsonConverter.cs Write float branch, no float specification"},
+    {"name":"decimal","json":"42.43","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_decimal_concept_{to,from}_json.cs"},
+    {"name":"boolean_true","json":"true","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_boolean_concept_{to,from}_json.cs"},
+    {"name":"boolean_false","json":"false","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_boolean_concept_{to,from}_json.cs"},
+    {"name":"date","json":"\"2024-01-15\"","direction":"both","source":"Fundamentals.Specs/Json/for_ConceptAsJsonConverter/when_converting_date_only_concept_{to,from}_json.cs; DateOnly O format"},
+    {"name":"offset","json":"\"2024-01-15T10:30:00+02:00\"","direction":"both","source":"hand-derived: Fundamentals/Json/ConceptAsJsonConverter.cs Write default branch delegates DateTimeOffset to System.Text.Json; seconds written, fraction trimmed"},
+    {"name":"offset_fraction","json":"\"2024-01-15T10:30:00.1234567+02:00\"","direction":"both","source":"hand-derived: System.Text.Json DateTimeOffset default branch, seven fraction digits retained"},
+    {"name":"offset_utc","json":"\"2024-01-15T10:30:00+00:00\"","direction":"both","source":"hand-derived: System.Text.Json DateTimeOffset writes +00:00, never Z"},
+    {"name":"offset_z","json":"\"2024-01-15T10:30:00Z\"","direction":"read","source":"hand-derived: ISO-8601 Z accepted on DateTimeOffset read"}
+  ]
+}
