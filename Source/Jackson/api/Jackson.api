@@ -13,6 +13,16 @@ public final class io/cratis/fundamentals/jackson/ConceptsModule : tools/jackson
 	public fun setupModule (Ltools/jackson/databind/JacksonModule$SetupContext;)V
 }
 
+public final class io/cratis/fundamentals/jackson/DerivedTypesModule : tools/jackson/databind/module/SimpleModule {
+	public static final field Companion Lio/cratis/fundamentals/jackson/DerivedTypesModule$Companion;
+	public static final field DERIVED_TYPE_ID_PROPERTY Ljava/lang/String;
+	public fun <init> (Lio/cratis/fundamentals/serialization/DerivedTypes;)V
+	public fun setupModule (Ltools/jackson/databind/JacksonModule$SetupContext;)V
+}
+
+public final class io/cratis/fundamentals/jackson/DerivedTypesModule$Companion {
+}
+
 public final class io/cratis/fundamentals/jackson/EnumModule : tools/jackson/databind/module/SimpleModule {
 	public fun <init> ()V
 	public fun setupModule (Ltools/jackson/databind/JacksonModule$SetupContext;)V

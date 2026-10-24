@@ -14,8 +14,8 @@ Shared domain primitives for JVM applications: typed concepts, correlation ident
 
 | Artifact | Purpose |
 | --- | --- |
-| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, string casing; no Jackson runtime dependency |
-| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` (optional embedded JSON keys), opt-in `TemporalModule`, `EnumModule` and `TimeSpanModule`; includes core and Jackson databind transitively |
+| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, derived-type annotation/registry, string casing; no Jackson runtime dependency |
+| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` (optional embedded JSON keys), opt-in `TemporalModule`, `EnumModule`, `TimeSpanModule` and `DerivedTypesModule`; includes core and Jackson databind transitively |
 
 Choose a published release version and replace `<released-version>` below. No release is implied by this source checkout.
 
@@ -124,6 +124,53 @@ var mapper = JsonMapper.builder()
 
 Import the types from `io.cratis.fundamentals.jackson`. `EnumModule`, `TimeSpanModule` and `TemporalModule` are never ServiceLoader-discovered; discovery creates the no-arg `ConceptsModule` with `ConceptKeyFormat.PLAIN`. Choose the key option explicitly on that module; registering it before or after EnumModule/TimeSpanModule gives the same wire.
 
+## Derived types (opt-in)
+
+Register every concrete member explicitly; no classpath scanning or Spring is required:
+
+```kotlin
+interface Shape
+@DerivedType("circle")
+data class Circle @JsonCreator constructor(@param:JsonProperty("radius") val radius: Double) : Shape
+
+val types = DerivedTypes.of(Circle::class.java)
+val mapper = JsonMapper.builder().addModule(DerivedTypesModule(types)).build()
+val json = mapper.writeValueAsString(Circle(2.0)) // {"radius":2.0,"_derivedTypeId":"circle"}
+val shape = mapper.readValue(json, Shape::class.java)
+```
+
+Use `io.cratis.fundamentals.serialization.DerivedType`/`DerivedTypes` and
+`io.cratis.fundamentals.jackson.DerivedTypesModule`; the creator annotations are Jackson's
+`com.fasterxml.jackson.annotation` types. Java uses `@DerivedType("circle")` on a record,
+`DerivedTypes.of(Circle.class)` and `new DerivedTypesModule(types)`:
+
+```java
+sealed interface Shape permits Circle {}
+@DerivedType("circle") record Circle(double radius) implements Shape {}
+var types = DerivedTypes.of(Circle.class);
+var mapper = JsonMapper.builder().addModule(new DerivedTypesModule(types)).build();
+var shape = mapper.readValue(mapper.writeValueAsString(new Circle(2.0)), Shape.class);
+```
+
+Ids are stable strings, globally unique within the immutable registry, and unrelated to Chronicle
+event types. With the default `Any`/`Object` sentinel, the primary target is the single non-JDK
+interface (including inherited/transitive interfaces), otherwise the nearest non-JDK superclass.
+Multiple interfaces require `@DerivedType(value = "circle", targetType = Shape::class)`
+(Java: `targetType = Shape.class`); it must be assignable from the derived class. Non-JDK base
+classes are also indexed for multilevel dispatch. Sealed families work but are not auto-registered.
+
+The module is never service-discovered. Combine registrations into one registry per mapper;
+a second module instance replaces the first, it does not merge. `DerivedTypes.EMPTY` is a no-op.
+Registered runtime classes write `_derivedTypeId` last, including concrete/Object declarations.
+Use runtime serialization (`writeValueAsString(value)`); explicitly static interface writers
+retain Jackson's static body selection. Ids read in any position and are stripped before bean
+delegation. Missing ids (including differently cased names) read as null, just like C#; unknown,
+null and non-string ids fail. Annotated but unregistered members of a registered family fail on
+write; unannotated implementations retain Jackson behavior. Body naming, creators, annotations,
+null inclusion and custom serializers remain Jackson-owned. Nested families in lists, arrays,
+maps and recursive objects use ordinary delegation. Native Jackson polymorphism/default typing
+is not a replacement contract of this module.
+
 ## Generated values
 
 Available in the core artifact, without Jackson. Kotlin and Java share static generators for UUID v4/v7, ULID, TypeID, NanoID, encoded random bytes and inclusive 64-bit integers. Randomness is cryptographically secure; UUID v7 and ULID do not use a monotonic counter.
@@ -223,7 +270,7 @@ Every PR needs exactly one release-intent label: `major`, `minor`, `patch`, or `
 
 ## Scope
 
-General ConceptMap/ConceptFactory APIs, temporal/collection converter parity, derived types, ambient correlation access and the broader Fundamentals library are not implemented. Their follow-up issues are linked in the [ledger](Documentation/parity.md#surfaces).
+General ConceptMap/ConceptFactory APIs, temporal/collection converter parity, ambient correlation access and the broader Fundamentals library are not implemented. Their follow-up issues are linked in the [ledger](Documentation/parity.md#surfaces).
 
 Arc.Kotlin still owns its existing `io.cratis.arc.concepts` and JSON code and has no dependency on these artifacts yet. Extraction is a separate change; this repository does not silently re-export or replace Arc's types.
 

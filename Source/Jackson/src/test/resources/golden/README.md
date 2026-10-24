@@ -24,3 +24,17 @@ The `double_whole` row is read-only because .NET writes `42` and Jackson writes 
 `timespan.json` uses an authority **outside** the Fundamentals pin: [dotnet/runtime v9.0.0 TimeSpanConverter.cs](https://github.com/dotnet/runtime/blob/v9.0.0/src/libraries/System.Text.Json/src/System/Text/Json/Serialization/Converters/Value/TimeSpanConverter.cs), lines 17-31 and 54-95 (called STJ in the rows). Fundamentals uses this built-in System.Text.Json converter; `Types/TypeConversion.cs:177-191` describes CLR conversion, not JSON formatting. TimeSpanModule writes canonical "c" values and keys, truncating toward zero to 100 ns. Canonical-shape reads plus ISO-8601 leniency, no short day/hour-minute forms, no zero-on-failure and no C# range enforcement are documented JVM bounds. Sub-tick truncation and ISO reads are pinned separately rather than attributed to a live oracle.
 
 `dictionaries.json` follows `Json/ComplexKeyDictionaryJsonConverterFactory.cs:64-79,87-124,142-145`, its concept-string-key specification and the pinned scalar branches of ConceptAsJsonConverter. UUIDs and dates are frozen representative values. The mapper uses `ConceptsModule(ConceptKeyFormat.EMBEDDED_JSON)` and explicit EnumModule/TimeSpanModule where needed; the concept-values row retains default ConceptsModule. C# commonly spells inner quotes as `\u0022`, whereas Jackson writes `\"`: tests compare parsed trees, so decoded property names and values match without asserting byte-identical outer escaping. Embedded reads try a complete non-null JSON value first, then plain text. JSON-string-literal legacy keys are ambiguous and decode first; malformed/trailing/null JSON falls back to text. Arbitrary complex non-concept keys remain out of scope.
+
+`derived-types.json` is **hand-derived from pinned source/specifications, not a live .NET oracle**.
+Authority is `f87af60265a2e59bd9b7435b0386ee06cb6d646a`, rooted at
+`Source/DotNET/Fundamentals`: `Serialization/DerivedTypeJsonConverter.cs:40-47,58-92`,
+`DerivedTypes.cs:78-85`, `DerivedTypeAttribute.cs` and `DerivedTypeId.cs`, plus
+`Fundamentals.Specs/Serialization/for_DerivedTypeJsonConverter/` and `for_DerivedTypes/`.
+Every row lists its narrower source/specification path and line range; the JSON-null row
+explicitly relies on STJ runtime null handling outside the pin. JVM models use camelCase
+Jackson properties (including the read-only id-first row), not a global STJ naming-policy clone.
+All 17 named rows execute exactly once as both/read/null/reject cases, with a coverage count and
+name assertion. Tree equality pins the discriminator and nested list/array/map/recursive shape;
+separate ordering assertions pin the id last. Java records/sealed families and JVM registration,
+module ordering, generic binding, strict-property delegation, empty-registry byte identity and
+ServiceLoader bounds are separate conformance tests, not additional .NET-oracle claims.
