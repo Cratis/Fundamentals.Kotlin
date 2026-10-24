@@ -11,7 +11,7 @@ A Kotlin and Java JVM library, not a Spring application or an event-sourced appl
 - Kotlin seed: `Cratis/Arc.Kotlin` at `8a4a9be13b4e4a9bb5c20d238726c641fb4412a2`. Casing fixture seed: `Cratis/Fundamentals.Go` at `c04690df426c5383b62dbf6c71bd799530d5bf0a`.
 - Two artifacts: `io.cratis:fundamentals` (core) and `io.cratis:fundamentals-jackson` (optional Jackson 3). Packages begin `io.cratis.fundamentals`. No hard Jackson or Spring dependency in core.
 - Arc.Kotlin's current concept/JSON ownership remains unchanged. Do not add re-exports, migration shims or an Arc dependency as an incidental improvement. A later extraction owns that migration.
-- v1 covers ConceptAs, CorrelationId, exact name-casing rules and a bounded scalar-concept Jackson module. No generated values, general factories/maps, derived-type discovery, correlation ambient storage or broader library parity. Keep missing behavior separate from deliberate differences; every Not implemented ledger row links to a real follow-up issue.
+- v2 covers ConceptAs, CorrelationId, exact name-casing rules, generated values, generation patterns/checksums and a bounded scalar-concept Jackson module. No general factories/maps, derived-type discovery, correlation ambient storage or broader library parity. Keep missing behavior separate from deliberate differences; every Not implemented ledger row links to a real follow-up issue.
 
 ## Workspace and toolchain
 

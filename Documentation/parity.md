@@ -3,7 +3,7 @@
 
 # Fundamentals Kotlin parity map
 
-This is the v1 compatibility ledger, not a claim of whole-product parity. The two artifacts are `io.cratis:fundamentals` and `io.cratis:fundamentals-jackson`. Kotlin and Java share the same JVM API; Jackson integration is optional.
+This is the v2 compatibility ledger, not a claim of whole-product parity. The two artifacts are `io.cratis:fundamentals` and `io.cratis:fundamentals-jackson`. Kotlin and Java share the same JVM API; Jackson integration is optional.
 
 ## Authority
 
@@ -24,8 +24,11 @@ Evidence paths below are repository-relative. An implementation status covers on
 | Concept map keys | `Json/ConceptAsJsonConverter.cs` `WriteAsPropertyName` / `ReadAsPropertyName` | `ConceptsModule` key serializers / deserializers | Kotlin-specific | `Source/Jackson/src/test/kotlin/io/cratis/fundamentals/jackson/ConceptsModuleTest.kt`; `ConceptsModuleJavaConformanceTest.java` | Text value keys are deliberate, not C# byte parity. UUID/String/date keys do not contain embedded JSON quotes. Applications sharing C# dictionaries must normalize keys explicitly. |
 | Correlation identifier | `Execution/CorrelationId.cs` | `execution.CorrelationId(UUID)`, `.create()`, `NOT_SET` | Implemented | `Source/Fundamentals/src/test/{kotlin,java}/io/cratis/fundamentals/execution/CorrelationId*Test.*` | Final immutable class; value equality/hash and lowercase UUID text. `create()` maps C# `New()` to UUID v4; `NOT_SET` maps `NotSet`. No implicit conversions or ambient storage. |
 | Camel and pascal casing | `Strings/StringExtensions.cs`; `Fundamentals.Specs/Strings/for_ToCamelCase/when_converting.cs` | Kotlin `String.toCamelCase()` / `toPascalCase()`; Java `StringExtensions` statics | Implemented | `Source/Fundamentals/src/test/resources/strings/case.json`; `StringExtensionsTest.kt`; `StringExtensionsJavaTest.java` | Two-leading-uppercase acronym guard and full camel loop retained. Simple UTF-16 casing, not word splitting. Null throws at the Kotlin non-null boundary; C# returns null. U+0130/U+0131 invariant exceptions are handled; selected Unicode cases, not every versioned .NET casing table, are pinned. |
-| Generated concept values | `Concepts/GenerateValue.cs`, `IGeneratable.cs`, `IGeneratableInContext.cs` | — | Not implemented ([#2](https://github.com/Cratis/Fundamentals.Kotlin/issues/2)) | — | No generated-default or generated-value behavior; no silent substitute. |
-| Patterns and checksums | `Concepts/GenerationPattern.cs`, `GenerationPatternParser.cs`, `Checksum.cs`, `GenerationChecksum.cs` | — | Not implemented ([#3](https://github.com/Cratis/Fundamentals.Kotlin/issues/3)) | — | Validation belongs to user implementations in v1; no implied C# validation coverage. |
+| Generated concept values | `Concepts/GenerateValue.cs`, `GenerateValue.Numbers.cs`, `GenerateValue.RandomStrings.cs`, `GenerateValue.TimeOrderedStrings.cs` | `concepts.GenerateValue`: `uuid`, `uuidV7`, `ulid`, `typeId`, `nanoId`, `bytes`, `integer`; `ValueEncoding` | Implemented | `Source/Fundamentals/src/test/kotlin/io/cratis/fundamentals/concepts/GenerateValue{Uuid,TimeOrderedStrings,RandomStrings,Integer}Test.kt`; `GenerateValueJavaTest.java` | `Guid` maps to `UUID`; `ValueEncoding` uses `BASE64_URL`, `HEX`, `BASE32`. Secure randomness, inclusive integers and timestamp bytes match. UUID v7 and ULID have no monotonic counter. |
+| Generation context | `Concepts/GenerationContext.cs` | `concepts.GenerationContext(Instant, String)`, `DEFAULT_TENANT` | Implemented | `GenerationContextTest.kt`; `GenerateValueJavaTest.java`; contextual generator tests | Immutable class, not a data class/record; no `copy`/destructuring API. UTC `Instant` maps `DateTimeOffset`; tenant is a portable string, defaulting to the zero UUID. Construction rejects UTC years outside 1–9999. Year 1 midnight is the missing-time sentinel, not Unix epoch. |
+| Generatable contracts | `Concepts/IGeneratable.cs`, `IGeneratableInContext.cs` | `concepts.Generatable<T>`, `GeneratableInContext<T>` | Partial | `GeneratableTest.kt`; `GeneratableJavaTest.java` | Memberless self-bounded markers: the JVM cannot enforce static abstract methods. Implementations provide `@JvmStatic fun create()` or `create(context)` in a companion, or Java `public static create`. No automatic generator discovery or factory service. |
+| CorrelationId generation contract | `Execution/CorrelationId.cs` | `CorrelationId : Generatable<CorrelationId>` | Implemented | `CorrelationIdTest.kt`; `GeneratableJavaTest.java` | Existing `create()` now delegates to `GenerateValue.uuid()`, remaining UUID v4. Constructor, equality, text and `NOT_SET` unchanged. |
+| Patterns and checksums | `Concepts/GenerateValue.Patterns.cs`, `GenerationPattern*.cs`, `GenerationCompletion*.cs`, `GenerationIndex.cs`, `GenerationWorkBudget.cs`, `GenerationCache.cs`, `GenerationChecksum.cs`, `Checksum.cs`, `EmptyPatternSupport.cs` | `GenerateValue.pattern`, `Checksum`, both static `hasValidChecksum` entry points | Implemented | `GenerationPatternVectorsTest.kt`; `ChecksumTest.kt`; `GenerateValuePatternTest.kt`; [vector provenance](../Source/Fundamentals/src/test/resources/concepts/generation/README.md) | Distinct-string uniform sampling, Mod11 conditioning, exact counts, 256-character output, 2,048 positions, 10,000 DFA/product states, 100,000,000 operations and 128-entry caches retained. Limits fail rather than falling back to biased sampling. Enum names are `NONE`, `LUHN`, `MOD11`, `MOD97`; exceptions differ as below. |
 | ConceptMap and general ConceptFactory | `Concepts/ConceptMap.cs`, `ConceptFactory.cs` | — | Not implemented ([#4](https://github.com/Cratis/Fundamentals.Kotlin/issues/4)) | — | JSON's private factory cache is not a discovery registry or general factory service. |
 | Remaining temporal / collection / specialized JSON | `Json` converters for TimeOnly, TimeSpan, dates, enums and collections | — | Not implemented ([#5](https://github.com/Cratis/Fundamentals.Kotlin/issues/5)) | — | No TimeOnly/TimeSpan, unsigned-number, enum-backed, DateTime, collection-concept or nested-concept parity. Plain lists of supported scalar concepts do work. |
 | Derived types | `Serialization/DerivedTypeJsonConverter.cs`, `DerivedTypes.cs`, `DerivedTypeAttribute.cs` | — | Not implemented ([#6](https://github.com/Cratis/Fundamentals.Kotlin/issues/6)) | — | No polymorphic discovery or discriminators. |
@@ -34,6 +37,28 @@ Evidence paths below are repository-relative. An implementation status covers on
 | Result, Catch and monads | `Monads`, `ExceptionExtensions.cs` | — | Not implemented ([#7](https://github.com/Cratis/Fundamentals.Kotlin/issues/7)) | — | No result/error-control abstraction in v1. |
 | Types, conversion and reflection | `Types`, `Conversion`, `Reflection` | — | Not implemented ([#7](https://github.com/Cratis/Fundamentals.Kotlin/issues/7)) | — | Only concept-specific type discovery exists. |
 | Other Fundamentals surfaces | `Collections`, `DependencyInjection`, `Diagnostics`, `Geospatial`, `Guids`, `Metrics`, `Reactive`, `ReadModels`, `Tasks`, `Timers`, `Traces`, `TimedLogging.cs` | — | Not implemented ([#7](https://github.com/Cratis/Fundamentals.Kotlin/issues/7)) | — | No full-product parity or automatic framework integration is claimed. |
+
+## Generated-value exception mapping
+
+All generated-value errors map to `IllegalArgumentException`, except JVM non-null boundaries (`NullPointerException`). Factories are internal; there are no new public exception classes. The original pattern and parser reason are retained. Enum spellings and timestamp rendering use JVM forms.
+
+| C# exception | JVM result |
+| --- | --- |
+| `InvalidValuePattern` | `IllegalArgumentException("Invalid value pattern '<pattern>': <reason>")`, including budget failures and invalid support indices |
+| `InvalidIntegerRange` | `IllegalArgumentException` identifying both inclusive bounds |
+| `InvalidNanoIdSize`, `InvalidNanoIdAlphabet`, `InvalidByteCount`, `InvalidTypeIdPrefix` | `IllegalArgumentException` preserving the respective bounds/alphabet/prefix reason |
+| `UnknownChecksum` | `IllegalArgumentException("Checksum '<algorithm>' is not a supported checksum algorithm for this operation.")`; `NONE` is invalid for validation |
+| `UnknownValueEncoding` | Undefined numeric enum values cannot be represented on the JVM; no runtime branch. Java null fails at the non-null boundary |
+| `EmptyPatternSupport` | `IllegalArgumentException("Value pattern '<pattern>' has no values with an emittable check digit.")` |
+| `PatternRequiresGenerationContext` | `IllegalArgumentException("Value pattern '<pattern>' requires a generation context for its UTC date segments.")` |
+| `MissingGenerationTime` | `IllegalArgumentException("A generation context must contain the time the operation was received.")` |
+| `GenerationTimeBeforeUnixEpoch` | `IllegalArgumentException` identifying the unsupported instant; applied to UUID v7, ULID and TypeID, not date patterns |
+| `ArgumentNullException` | Java null arguments fail with `NullPointerException` at Kotlin non-null boundaries |
+| JVM-only year range | `GenerationContext` construction rejects UTC years outside 1–9999 with `IllegalArgumentException`; C# cannot construct these values |
+
+Patterns substitute one captured UTC date; the tenant does not affect built-in strategies. Checksum validation ignores printable nondigits in the payload but requires the exact numeric trailing suffix. Pattern membership is an internal shape check and does not imply arithmetic checksum validation. Both public validation entry points reject `Checksum.NONE`.
+
+The applicable pinned vector sections are all exercised: 19 support, 25 invalid-pattern, 10 membership, 18 checksum and 24 validation rows. Screenplay binder assessments and range source parsing are deliberately outside this runtime API. UUID v7/ULID/TypeID timestamps are UTC Unix-epoch milliseconds; sub-millisecond precision is truncated. Captured date patterns can use pre-epoch dates other than the missing-time sentinel.
 
 ## Wire and language differences
 

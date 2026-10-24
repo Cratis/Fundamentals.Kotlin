@@ -20,6 +20,17 @@ class GeneratableTest {
     }
 
     @Test
+    fun `readme generated values example uses context and validates invoice`() {
+        val context = GenerationContext(Instant.parse("2024-02-29T10:00:00Z"), "tenant-a")
+        val request = SomeId.create()
+        val order = OrderId.create(context)
+        assertEquals(4, request.value().version())
+        assertTrue(order.value().startsWith("order_"))
+        val invoice = GenerateValue.pattern("INV-{yyyy}-#{7}", context, Checksum.LUHN)
+        assertTrue(Checksum.hasValidChecksum(invoice, Checksum.LUHN))
+    }
+
+    @Test
     fun `contextual concepts reuse captured time and tenant`() {
         val context = GenerationContext(Instant.parse("2024-06-15T10:34:56.789Z"), "tenant-a")
         val order: GeneratableInContext<*> = OrderId.create(context)

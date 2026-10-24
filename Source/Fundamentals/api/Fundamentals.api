@@ -1,3 +1,19 @@
+public final class io/cratis/fundamentals/concepts/Checksum : java/lang/Enum {
+	public static final field Companion Lio/cratis/fundamentals/concepts/Checksum$Companion;
+	public static final field LUHN Lio/cratis/fundamentals/concepts/Checksum;
+	public static final field MOD11 Lio/cratis/fundamentals/concepts/Checksum;
+	public static final field MOD97 Lio/cratis/fundamentals/concepts/Checksum;
+	public static final field NONE Lio/cratis/fundamentals/concepts/Checksum;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static final fun hasValidChecksum (Ljava/lang/String;Lio/cratis/fundamentals/concepts/Checksum;)Z
+	public static fun valueOf (Ljava/lang/String;)Lio/cratis/fundamentals/concepts/Checksum;
+	public static fun values ()[Lio/cratis/fundamentals/concepts/Checksum;
+}
+
+public final class io/cratis/fundamentals/concepts/Checksum$Companion {
+	public final fun hasValidChecksum (Ljava/lang/String;Lio/cratis/fundamentals/concepts/Checksum;)Z
+}
+
 public abstract interface class io/cratis/fundamentals/concepts/ConceptAs {
 	public static final field Companion Lio/cratis/fundamentals/concepts/ConceptAs$Companion;
 	public static fun isConcept (Ljava/lang/Class;)Z
@@ -14,7 +30,64 @@ public final class io/cratis/fundamentals/concepts/ConceptAsKt {
 	public static final synthetic fun getValue (Lio/cratis/fundamentals/concepts/ConceptAs;)Ljava/lang/Object;
 }
 
-public final class io/cratis/fundamentals/execution/CorrelationId : io/cratis/fundamentals/concepts/ConceptAs {
+public abstract interface class io/cratis/fundamentals/concepts/Generatable {
+}
+
+public abstract interface class io/cratis/fundamentals/concepts/GeneratableInContext {
+}
+
+public final class io/cratis/fundamentals/concepts/GenerateValue {
+	public static final field INSTANCE Lio/cratis/fundamentals/concepts/GenerateValue;
+	public static final fun bytes (I)Ljava/lang/String;
+	public static final fun bytes (ILio/cratis/fundamentals/concepts/ValueEncoding;)Ljava/lang/String;
+	public static synthetic fun bytes$default (ILio/cratis/fundamentals/concepts/ValueEncoding;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun hasValidChecksum (Ljava/lang/String;Lio/cratis/fundamentals/concepts/Checksum;)Z
+	public static final fun integer (JJ)J
+	public static final fun nanoId ()Ljava/lang/String;
+	public static final fun nanoId (I)Ljava/lang/String;
+	public static final fun nanoId (ILjava/lang/String;)Ljava/lang/String;
+	public static synthetic fun nanoId$default (ILjava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun pattern (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun pattern (Ljava/lang/String;Lio/cratis/fundamentals/concepts/Checksum;)Ljava/lang/String;
+	public static final fun pattern (Ljava/lang/String;Lio/cratis/fundamentals/concepts/GenerationContext;)Ljava/lang/String;
+	public static final fun pattern (Ljava/lang/String;Lio/cratis/fundamentals/concepts/GenerationContext;Lio/cratis/fundamentals/concepts/Checksum;)Ljava/lang/String;
+	public static synthetic fun pattern$default (Ljava/lang/String;Lio/cratis/fundamentals/concepts/Checksum;ILjava/lang/Object;)Ljava/lang/String;
+	public static synthetic fun pattern$default (Ljava/lang/String;Lio/cratis/fundamentals/concepts/GenerationContext;Lio/cratis/fundamentals/concepts/Checksum;ILjava/lang/Object;)Ljava/lang/String;
+	public static final fun typeId (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun typeId (Ljava/lang/String;Lio/cratis/fundamentals/concepts/GenerationContext;)Ljava/lang/String;
+	public static final fun ulid ()Ljava/lang/String;
+	public static final fun ulid (Lio/cratis/fundamentals/concepts/GenerationContext;)Ljava/lang/String;
+	public static final fun uuid ()Ljava/util/UUID;
+	public static final fun uuidV7 ()Ljava/util/UUID;
+	public static final fun uuidV7 (Lio/cratis/fundamentals/concepts/GenerationContext;)Ljava/util/UUID;
+}
+
+public final class io/cratis/fundamentals/concepts/GenerationContext {
+	public static final field Companion Lio/cratis/fundamentals/concepts/GenerationContext$Companion;
+	public static final field DEFAULT_TENANT Ljava/lang/String;
+	public fun <init> (Ljava/time/Instant;)V
+	public fun <init> (Ljava/time/Instant;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/time/Instant;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNow ()Ljava/time/Instant;
+	public final fun getTenant ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/concepts/GenerationContext$Companion {
+}
+
+public final class io/cratis/fundamentals/concepts/ValueEncoding : java/lang/Enum {
+	public static final field BASE32 Lio/cratis/fundamentals/concepts/ValueEncoding;
+	public static final field BASE64_URL Lio/cratis/fundamentals/concepts/ValueEncoding;
+	public static final field HEX Lio/cratis/fundamentals/concepts/ValueEncoding;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/cratis/fundamentals/concepts/ValueEncoding;
+	public static fun values ()[Lio/cratis/fundamentals/concepts/ValueEncoding;
+}
+
+public final class io/cratis/fundamentals/execution/CorrelationId : io/cratis/fundamentals/concepts/ConceptAs, io/cratis/fundamentals/concepts/Generatable {
 	public static final field Companion Lio/cratis/fundamentals/execution/CorrelationId$Companion;
 	public static final field NOT_SET Lio/cratis/fundamentals/execution/CorrelationId;
 	public fun <init> (Ljava/util/UUID;)V

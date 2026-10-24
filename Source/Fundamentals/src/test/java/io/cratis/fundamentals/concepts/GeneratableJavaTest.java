@@ -21,6 +21,17 @@ final class GeneratableJavaTest {
     }
 
     @Test
+    void readmeGeneratedValuesExampleWorksWithJavaRecords() {
+        var context = new GenerationContext(Instant.parse("2024-02-29T10:00:00Z"), "tenant-a");
+        var request = SomeId.create();
+        var order = OrderId.create(context);
+        assertEquals(4, request.value().version());
+        assertTrue(order.value().startsWith("order_"));
+        var invoice = GenerateValue.pattern("INV-{yyyy}-#{7}", context, Checksum.LUHN);
+        assertTrue(GenerateValue.hasValidChecksum(invoice, Checksum.LUHN));
+    }
+
+    @Test
     void recordsFollowTheStaticFactoryConvention() {
         Generatable<SomeId> id = SomeId.create();
         assertInstanceOf(SomeId.class, id);
