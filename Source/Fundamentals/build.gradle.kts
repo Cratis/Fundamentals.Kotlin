@@ -16,7 +16,7 @@ kotlin {
 }
 
 dependencies {
-    testImplementation("tools.jackson.core:jackson-databind:3.2.2")
+    testImplementation("tools.jackson.core:jackson-databind:3.2.4")
 }
 
 mavenPublishing {
