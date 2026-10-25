@@ -122,6 +122,28 @@ public final class io/cratis/fundamentals/execution/CorrelationId$Companion {
 	public final fun create ()Lio/cratis/fundamentals/execution/CorrelationId;
 }
 
+public abstract interface class io/cratis/fundamentals/execution/CorrelationIdAccessor {
+	public abstract fun getCurrent ()Lio/cratis/fundamentals/execution/CorrelationId;
+}
+
+public final class io/cratis/fundamentals/execution/CorrelationIdContext : io/cratis/fundamentals/execution/CorrelationIdAccessor, io/cratis/fundamentals/execution/CorrelationIdModifier {
+	public static final field Companion Lio/cratis/fundamentals/execution/CorrelationIdContext$Companion;
+	public fun <init> ()V
+	public fun clear ()V
+	public fun getCurrent ()Lio/cratis/fundamentals/execution/CorrelationId;
+	public fun set (Lio/cratis/fundamentals/execution/CorrelationId;)V
+	public static final fun shared ()Lio/cratis/fundamentals/execution/CorrelationIdContext;
+}
+
+public final class io/cratis/fundamentals/execution/CorrelationIdContext$Companion {
+	public final fun shared ()Lio/cratis/fundamentals/execution/CorrelationIdContext;
+}
+
+public abstract interface class io/cratis/fundamentals/execution/CorrelationIdModifier {
+	public abstract fun clear ()V
+	public abstract fun set (Lio/cratis/fundamentals/execution/CorrelationId;)V
+}
+
 public abstract interface annotation class io/cratis/fundamentals/serialization/DerivedType : java/lang/annotation/Annotation {
 	public abstract fun targetType ()Ljava/lang/Class;
 	public abstract fun value ()Ljava/lang/String;
