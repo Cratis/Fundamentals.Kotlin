@@ -144,6 +144,22 @@ public abstract interface class io/cratis/fundamentals/execution/CorrelationIdMo
 	public abstract fun set (Lio/cratis/fundamentals/execution/CorrelationId;)V
 }
 
+public final class io/cratis/fundamentals/serialization/CamelCaseNamingPolicy : io/cratis/fundamentals/serialization/NamingPolicy {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getPropertyName (Ljava/lang/String;)Ljava/lang/String;
+	public fun getReadModelName (Ljava/lang/Class;)Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/serialization/DefaultNamingPolicy : io/cratis/fundamentals/serialization/NamingPolicy {
+	public fun <init> ()V
+	public fun <init> (Z)V
+	public synthetic fun <init> (ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getPropertyName (Ljava/lang/String;)Ljava/lang/String;
+	public fun getReadModelName (Ljava/lang/Class;)Ljava/lang/String;
+}
+
 public abstract interface annotation class io/cratis/fundamentals/serialization/DerivedType : java/lang/annotation/Annotation {
 	public abstract fun targetType ()Ljava/lang/Class;
 	public abstract fun value ()Ljava/lang/String;
@@ -174,6 +190,15 @@ public final class io/cratis/fundamentals/serialization/DerivedTypes {
 public final class io/cratis/fundamentals/serialization/DerivedTypes$Companion {
 	public final fun of (Ljava/lang/Iterable;)Lio/cratis/fundamentals/serialization/DerivedTypes;
 	public final fun of ([Ljava/lang/Class;)Lio/cratis/fundamentals/serialization/DerivedTypes;
+}
+
+public abstract interface class io/cratis/fundamentals/serialization/NamingPolicy {
+	public fun getPropertyName (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun getReadModelName (Ljava/lang/Class;)Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/serialization/NamingPolicy$DefaultImpls {
+	public static fun getPropertyName (Lio/cratis/fundamentals/serialization/NamingPolicy;Ljava/lang/String;)Ljava/lang/String;
 }
 
 public final class io/cratis/fundamentals/strings/StringExtensions {

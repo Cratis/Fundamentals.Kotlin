@@ -17,7 +17,7 @@ A Kotlin and Java JVM library, not a Spring application or an event-sourced appl
 
 `Source/Fundamentals` and `Source/Jackson` are separate Gradle modules. Production code is under `src/main/kotlin`, tests under `src/test/kotlin` and `src/test/java`, golden fixtures under `src/test/resources`. One public top-level type per production file; private/internal support stays narrow. Keep copyright and MIT notices.
 
-Use JDK 17, JVM target/release 17, Kotlin 2.4.21 and Gradle wrapper 8.14.6. Kotlin uses explicit API mode and JVM default ENABLE. Kotlin and Java warnings are errors. Jackson is 3.2.4 (`tools.jackson.*`), aligned with Spring Boot 4.1; do not import Jackson 2 databind/core. Jackson annotations retain their upstream `com.fasterxml.jackson.annotation` package. The core's only implementation dependency is Kotlin stdlib; Jackson in core tests does not make it a runtime dependency.
+Use JDK 17, JVM target/release 17, Kotlin 2.4.21 and Gradle wrapper 8.14.6. Kotlin uses explicit API mode and JVM default ENABLE. Kotlin and Java warnings are errors. Jackson is 3.2.4 (`tools.jackson.*`), aligned with Spring Boot 4.1; do not import Jackson 2 databind/core. Jackson annotations retain their upstream `com.fasterxml.jackson.annotation` package. The core's implementation dependencies are Kotlin stdlib and `org.atteo:evo-inflector` (pluralization for `serialization.DefaultNamingPolicy`/`CamelCaseNamingPolicy`); Jackson in core tests does not make it a runtime dependency.
 
 ## Public APIs and wire behavior
 
