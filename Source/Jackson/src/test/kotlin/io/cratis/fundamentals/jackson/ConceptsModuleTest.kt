@@ -51,10 +51,23 @@ class ConceptsModuleTest {
     class NullValue : ConceptAs<String?> {
         override fun value(): String? = null
     }
+    data class InnerText(private val raw: String) : ConceptAs<String> {
+        override fun value(): String = raw
+    }
+    data class OuterText(private val raw: InnerText) : ConceptAs<InnerText> {
+        override fun value(): InnerText = raw
+    }
     data class NullableField(val id: GuidConcept?)
 
     private val mapper = JsonMapper.builder().addModule(ConceptsModule()).build()
     private val uuid = UUID.fromString("6f9619ff-8b86-d011-b42d-00c04fc964ff")
+
+    @Test
+    fun `nested concepts round trip`() {
+        val concept = OuterText(InnerText("a"))
+        assertEquals("\"a\"", mapper.writeValueAsString(concept))
+        assertEquals(concept, mapper.readValue("\"a\"", OuterText::class.java))
+    }
 
     @Test
     fun `null values and nullable list elements stay null`() {

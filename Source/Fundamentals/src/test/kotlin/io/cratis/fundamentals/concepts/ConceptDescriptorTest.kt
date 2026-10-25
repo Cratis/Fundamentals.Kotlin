@@ -36,6 +36,18 @@ class ConceptDescriptorTest {
     private class Missing private constructor() : ConceptAs<String> {
         override fun value(): String = "missing"
     }
+    private data class OtherTextConcept(private val raw: String) : ConceptAs<String> {
+        override fun value(): String = raw
+    }
+    private data class Inner(private val raw: String) : ConceptAs<String> {
+        override fun value(): String = raw
+    }
+    private data class Outer(private val raw: Inner) : ConceptAs<Inner> {
+        override fun value(): Inner = raw
+    }
+    private class NullValue : ConceptAs<String?> {
+        override fun value(): String? = null
+    }
     private class Validated(private val raw: Int) : ConceptAs<Int> {
         init { if (raw < 0) throw validationFailure }
         override fun value(): Int = raw
@@ -66,6 +78,26 @@ class ConceptDescriptorTest {
         for (text in listOf(Missing::class.java.name, "record", "static of", "single-arg constructor")) {
             assertTrue(checkNotNull(error.message).contains(text), error.message)
         }
+    }
+
+    @Test
+    fun `create accepts a value that already is the nested concept`() {
+        assertEquals(Inner("a"), ConceptDescriptor.of(Outer::class.java).create(Inner("a")).value())
+    }
+
+    @Test
+    fun `create still unwraps a different concept to the underlying value`() {
+        assertEquals("a", ConceptDescriptor.of(Text::class.java).create(OtherTextConcept("a")).value())
+    }
+
+    @Test
+    fun `null inputs are still rejected`() {
+        val descriptor = ConceptDescriptor.of(Text::class.java)
+        val error = assertThrows(IllegalArgumentException::class.java) { descriptor.create(NullValue()) }
+        assertTrue(checkNotNull(error.message).startsWith("Could not convert"), error.message)
+        val method = ConceptDescriptor::class.java.getMethod("create", Any::class.java)
+        val thrown = assertThrows(java.lang.reflect.InvocationTargetException::class.java) { method.invoke(descriptor, null) }
+        assertTrue(thrown.cause is NullPointerException)
     }
 
     @Test

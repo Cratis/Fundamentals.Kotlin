@@ -30,8 +30,9 @@ internal object ConceptValueConversion {
     )
 
     fun convert(conceptType: Class<*>, valueType: Class<*>, value: Any): Any = try {
-        val raw = if (value is ConceptAs<*>) checkNotNull(value.value()) else value
         val target = valueType.kotlin.javaObjectType
+        if (target.isInstance(value)) return value
+        val raw = if (value is ConceptAs<*>) checkNotNull(value.value()) else value
         if (target.isInstance(raw)) raw else checkNotNull(conversions[target])(raw)
     } catch (exception: Exception) {
         throw IllegalArgumentException(
