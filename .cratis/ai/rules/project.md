@@ -11,6 +11,7 @@ A Kotlin and Java JVM library, not a Spring application or an event-sourced appl
 - Kotlin seed: `Cratis/Arc.Kotlin` at `8a4a9be13b4e4a9bb5c20d238726c641fb4412a2`. Casing fixture seed: `Cratis/Fundamentals.Go` at `c04690df426c5383b62dbf6c71bd799530d5bf0a`.
 - Two artifacts: `io.cratis:fundamentals` (core) and `io.cratis:fundamentals-jackson` (optional Jackson 3). Packages begin `io.cratis.fundamentals`. No hard Jackson or Spring dependency in core.
 - Arc.Kotlin consumes these artifacts (stages tracked in Cratis/Arc.Kotlin#301); do not add re-exports, migration shims or an Arc dependency here.
+- Do not add a JVM enum-value or flags contract mirroring Arc's `ArcEnum`/`@Flags` without a C# Fundamentals counterpart and an accepted decision on Cratis/Fundamentals.Kotlin#7.
 - 0.4.0 adds opt-in EnumModule, TimeSpanModule and ConceptsModule(ConceptKeyFormat.EMBEDDED_JSON) to the existing concept descriptors/factory, LocalDate/LocalTime/concept collections, CorrelationId, casing, generated values and patterns/checksums. No derived-type discovery, arbitrary complex non-concept dictionary keys, correlation ambient storage (the later `CorrelationIdContext` slice is the only exception) or broader parity. Keep missing behavior separate from deliberate differences; every Not implemented ledger row links to a real follow-up issue.
 
 ## Workspace and toolchain
