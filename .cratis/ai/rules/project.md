@@ -11,7 +11,7 @@ A Kotlin and Java JVM library, not a Spring application or an event-sourced appl
 - Kotlin seed: `Cratis/Arc.Kotlin` at `8a4a9be13b4e4a9bb5c20d238726c641fb4412a2`. Casing fixture seed: `Cratis/Fundamentals.Go` at `c04690df426c5383b62dbf6c71bd799530d5bf0a`.
 - Two artifacts: `io.cratis:fundamentals` (core) and `io.cratis:fundamentals-jackson` (optional Jackson 3). Packages begin `io.cratis.fundamentals`. No hard Jackson or Spring dependency in core.
 - Arc.Kotlin's current concept/JSON ownership remains unchanged. Do not add re-exports, migration shims or an Arc dependency as an incidental improvement. A later extraction owns that migration.
-- 0.4.0 adds opt-in EnumModule, TimeSpanModule and ConceptsModule(ConceptKeyFormat.EMBEDDED_JSON) to the existing concept descriptors/factory, LocalDate/LocalTime/concept collections, CorrelationId, casing, generated values and patterns/checksums. No derived-type discovery, arbitrary complex non-concept dictionary keys, correlation ambient storage or broader parity. Keep missing behavior separate from deliberate differences; every Not implemented ledger row links to a real follow-up issue.
+- 0.4.0 adds opt-in EnumModule, TimeSpanModule and ConceptsModule(ConceptKeyFormat.EMBEDDED_JSON) to the existing concept descriptors/factory, LocalDate/LocalTime/concept collections, CorrelationId, casing, generated values and patterns/checksums. No derived-type discovery, arbitrary complex non-concept dictionary keys, correlation ambient storage (the later `CorrelationIdContext` slice is the only exception) or broader parity. Keep missing behavior separate from deliberate differences; every Not implemented ledger row links to a real follow-up issue.
 
 ## Workspace and toolchain
 
@@ -23,7 +23,7 @@ Use JDK 17, JVM target/release 17, Kotlin 2.4.21 and Gradle wrapper 8.14.6. Kotl
 
 `ConceptAs<T>` has one required abstract method, `value()`, plus a synthetic Kotlin extension property. Java records can implement it without getters or annotations; primitive record components must be boxed (`Integer`, not `int`). Implementations own equality, hashing, comparison, display, validation and null rejection. Static helpers resolve generic interfaces/base classes; do not silently convert an unresolved type to Object.
 
-`CorrelationId` is a final immutable UUID-backed class, not an inline/value class. Preserve `NOT_SET`, static `create()`, value equality/hash and lowercase UUID text. Do not add ThreadLocal storage, parsing or propagation APIs in this slice.
+`CorrelationId` is a final immutable UUID-backed class, not an inline/value class. Preserve `NOT_SET`, static `create()`, value equality/hash and lowercase UUID text. Do not add ThreadLocal storage, parsing or propagation APIs to `CorrelationId` itself. The separate `CorrelationIdAccessor`/`CorrelationIdModifier`/`CorrelationIdContext` slice is a bounded, thread-bound legacy-compatible context: per-thread non-inheritable storage, lazy generation on first read, no coroutine propagation, no scope restoration and no `NOT_SET`-on-unbound semantics.
 
 String functions live in `StringExtensions.kt`, with Java facade `StringExtensions`. Preserve the two-leading-uppercase acronym guard, full camel loop and UTF-16 behavior; do not replace the loop with a first-character shortcut. Kotlin String receivers are non-null; this deliberately differs from C# null handling. Invariant U+0130/U+0131 exceptions are pinned. Do not claim universal Unicode table equivalence.
 

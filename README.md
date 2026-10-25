@@ -14,7 +14,7 @@ Shared domain primitives for JVM applications: typed concepts, correlation ident
 
 | Artifact | Purpose |
 | --- | --- |
-| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, derived-type annotation/registry, string casing; no Jackson runtime dependency |
+| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, thread-bound `CorrelationIdContext`, derived-type annotation/registry, string casing; no Jackson runtime dependency |
 | `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` (optional embedded JSON keys), opt-in `TemporalModule`, `EnumModule`, `TimeSpanModule` and `DerivedTypesModule`; includes core and Jackson databind transitively |
 
 Choose a published release version and replace `<released-version>` below. No release is implied by this source checkout.
@@ -270,7 +270,7 @@ Every PR needs exactly one release-intent label: `major`, `minor`, `patch`, or `
 
 ## Scope
 
-General ConceptMap/ConceptFactory APIs, temporal/collection converter parity, ambient correlation access and the broader Fundamentals library are not implemented. Their follow-up issues are linked in the [ledger](Documentation/parity.md#surfaces).
+General ConceptMap/ConceptFactory APIs, temporal/collection converter parity, AsyncLocal-style correlation propagation (`CorrelationIdContext` is thread-bound only) and the broader Fundamentals library are not implemented. Their follow-up issues are linked in the [ledger](Documentation/parity.md#surfaces).
 
 Arc.Kotlin still owns its existing `io.cratis.arc.concepts` and JSON code and has no dependency on these artifacts yet. Extraction is a separate change; this repository does not silently re-export or replace Arc's types.
 
