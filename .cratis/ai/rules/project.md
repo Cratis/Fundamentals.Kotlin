@@ -10,7 +10,7 @@ A Kotlin and Java JVM library, not a Spring application or an event-sourced appl
 - C# authority: `Cratis/Fundamentals` at `f87af60265a2e59bd9b7435b0386ee06cb6d646a`, primarily `Source/DotNET/Fundamentals`. Ledger entries must name exact paths, implemented contracts, tests and deliberate deviations. Do not infer full parity from successful compilation or a round trip.
 - Kotlin seed: `Cratis/Arc.Kotlin` at `8a4a9be13b4e4a9bb5c20d238726c641fb4412a2`. Casing fixture seed: `Cratis/Fundamentals.Go` at `c04690df426c5383b62dbf6c71bd799530d5bf0a`.
 - Two artifacts: `io.cratis:fundamentals` (core) and `io.cratis:fundamentals-jackson` (optional Jackson 3). Packages begin `io.cratis.fundamentals`. No hard Jackson or Spring dependency in core.
-- Arc.Kotlin's current concept/JSON ownership remains unchanged. Do not add re-exports, migration shims or an Arc dependency as an incidental improvement. A later extraction owns that migration.
+- Arc.Kotlin consumes these artifacts (stages tracked in Cratis/Arc.Kotlin#301); do not add re-exports, migration shims or an Arc dependency here.
 - 0.4.0 adds opt-in EnumModule, TimeSpanModule and ConceptsModule(ConceptKeyFormat.EMBEDDED_JSON) to the existing concept descriptors/factory, LocalDate/LocalTime/concept collections, CorrelationId, casing, generated values and patterns/checksums. No derived-type discovery, arbitrary complex non-concept dictionary keys, correlation ambient storage (the later `CorrelationIdContext` slice is the only exception) or broader parity. Keep missing behavior separate from deliberate differences; every Not implemented ledger row links to a real follow-up issue.
 
 ## Workspace and toolchain
