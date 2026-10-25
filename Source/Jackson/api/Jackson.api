@@ -1,3 +1,7 @@
+public final class io/cratis/fundamentals/jackson/AcronymFriendlyCamelCaseNamingStrategy : tools/jackson/databind/PropertyNamingStrategies$NamingBase {
+	public fun <init> ()V
+}
+
 public final class io/cratis/fundamentals/jackson/ConceptKeyFormat : java/lang/Enum {
 	public static final field EMBEDDED_JSON Lio/cratis/fundamentals/jackson/ConceptKeyFormat;
 	public static final field PLAIN Lio/cratis/fundamentals/jackson/ConceptKeyFormat;

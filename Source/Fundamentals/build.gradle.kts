@@ -16,6 +16,7 @@ kotlin {
 }
 
 dependencies {
+    implementation("org.atteo:evo-inflector:2.0")
     testImplementation("tools.jackson.core:jackson-databind:3.2.4")
 }
 

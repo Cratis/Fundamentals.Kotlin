@@ -14,8 +14,8 @@ Shared domain primitives for JVM applications: typed concepts, correlation ident
 
 | Artifact | Purpose |
 | --- | --- |
-| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, thread-bound `CorrelationIdContext`, derived-type annotation/registry, string casing; no Jackson runtime dependency |
-| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` (optional embedded JSON keys), opt-in `TemporalModule`, `EnumModule`, `TimeSpanModule` and `DerivedTypesModule`; includes core and Jackson databind transitively |
+| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, thread-bound `CorrelationIdContext`, derived-type annotation/registry, string casing, `NamingPolicy` with `DefaultNamingPolicy`/`CamelCaseNamingPolicy`; no Jackson runtime dependency |
+| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` (optional embedded JSON keys), opt-in `TemporalModule`, `EnumModule`, `TimeSpanModule` and `DerivedTypesModule`, `AcronymFriendlyCamelCaseNamingStrategy`; includes core and Jackson databind transitively |
 
 Choose a published release version and replace `<released-version>` below. No release is implied by this source checkout.
 
@@ -235,6 +235,28 @@ class GeneratedValuesExample {
 Patterns support `#` (digit), `?` (uppercase letter), `*` (digit/uppercase), sorted distinct classes such as `[A-HJ-NP-Z2-9]`, escapes, `{n}` / `{m,n}` repeats, and captured UTC `{yyyy}`, `{yy}`, `{MM}`, `{dd}` segments. For example, `GenerateValue.pattern("ORD-[A-HJ-NP-Z2-9]{4}-#{4,6}")`. They sample uniformly over distinct strings, not derivations or lengths. Checksum choices are `NONE`, `LUHN`, `MOD11`, `MOD97`; Mod11 excludes payloads requiring a check digit of 10. Validation requires the exact numeric suffix and rejects `NONE`. Date patterns can use pre-epoch dates; UUID v7, ULID and TypeID cannot.
 
 Patterns are limited to 256 final characters (including check digits), repeat bounds 1–64, 2,048 automaton positions, 10,000 DFA/product states and 100,000,000 construction operations. Parsed patterns and counted supports use separate 128-entry caches. Exhausted budgets and invalid input fail with `IllegalArgumentException`; there is no biased fallback. Java null arguments fail at Kotlin's non-null boundary. See [exception mappings and vector evidence](Documentation/parity.md#generated-value-exception-mapping).
+
+## Naming policies
+
+`NamingPolicy` derives storage names from JVM types. `DefaultNamingPolicy` pluralizes the simple class name (English inflection, aligned with Humanizer for `Person`→`People` and `Index`→`Indices`); `CamelCaseNamingPolicy` also camel-cases read-model and member names. `AcronymFriendlyCamelCaseNamingStrategy` (in `fundamentals-jackson`) is an explicit Jackson property naming strategy; it is not registered automatically.
+
+```kotlin
+import io.cratis.fundamentals.serialization.CamelCaseNamingPolicy
+import io.cratis.fundamentals.serialization.DefaultNamingPolicy
+
+class Person
+
+val collection = DefaultNamingPolicy().getReadModelName(Person::class.java)   // "People"
+val camel = CamelCaseNamingPolicy().getReadModelName(Person::class.java)      // "people"
+```
+
+```java
+import io.cratis.fundamentals.serialization.DefaultNamingPolicy;
+import io.cratis.fundamentals.serialization.NamingPolicy;
+
+NamingPolicy policy = new DefaultNamingPolicy(false);      // keep the simple class name
+NamingPolicy custom = type -> "app_" + type.getSimpleName(); // getPropertyName defaults to identity
+```
 
 ## Jackson registration and construction
 
