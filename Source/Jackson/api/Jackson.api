@@ -32,6 +32,10 @@ public final class io/cratis/fundamentals/jackson/EnumModule : tools/jackson/dat
 	public fun setupModule (Ltools/jackson/databind/JacksonModule$SetupContext;)V
 }
 
+public final class io/cratis/fundamentals/jackson/GeospatialModule : tools/jackson/databind/module/SimpleModule {
+	public fun <init> ()V
+}
+
 public final class io/cratis/fundamentals/jackson/TemporalModule : tools/jackson/databind/module/SimpleModule {
 	public fun <init> ()V
 }

@@ -1,0 +1,13 @@
+{
+  "revision": "f87af60265a2e59bd9b7435b0386ee06cb6d646a",
+  "sourceRoot": "Source/DotNET/Fundamentals",
+  "provenance": "Hand-derived from the C# converters, not a live .NET oracle. Whole-number coordinates are read-only rows because Jackson writes 1.0 where .NET writes 1.",
+  "cases": [
+    { "name": "point", "type": "Point", "direction": "both", "json": "{\"type\":\"Point\",\"coordinates\":[10.5,59.25]}", "source": "Json/PointJsonConverter.cs:Write" },
+    { "name": "line_string", "type": "LineString", "direction": "both", "json": "{\"type\":\"LineString\",\"coordinates\":[[10.5,59.25],[11.5,60.75]]}", "source": "Json/LineStringJsonConverter.cs:Write" },
+    { "name": "polygon", "type": "Polygon", "direction": "both", "json": "{\"type\":\"Polygon\",\"coordinates\":[[[0.5,0.5],[10.5,0.5],[10.5,10.5],[0.5,0.5]]]}", "source": "Json/PolygonJsonConverter.cs:Write" },
+    { "name": "polygon_with_hole", "type": "Polygon", "direction": "both", "json": "{\"type\":\"Polygon\",\"coordinates\":[[[0.5,0.5],[10.5,0.5],[10.5,10.5],[0.5,0.5]],[[2.5,2.5],[3.5,2.5],[3.5,3.5],[2.5,2.5]]]}", "source": "Json/PolygonJsonConverter.cs:Write,ReadPolygonCoordinates" },
+    { "name": "whole_numbers", "type": "Point", "direction": "read", "json": "{\"type\":\"Point\",\"coordinates\":[10,60]}", "source": "Json/PointJsonConverter.cs:Read" },
+    { "name": "case_insensitive", "type": "Point", "direction": "read", "json": "{\"TYPE\":\"Point\",\"Coordinates\":[10.5,59.25],\"extra\":true}", "source": "Json/PointJsonConverter.cs:Read (OrdinalIgnoreCase)" }
+  ]
+}
