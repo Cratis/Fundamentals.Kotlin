@@ -35,9 +35,9 @@ public class GeospatialModule : SimpleModule("Cratis.Fundamentals.Geospatial") {
             (listOf(value.shell) + value.holes).forEach { GeoJsonWireFormat.writePoints(generator, it.coordinates) }
             generator.writeEndArray()
         })
-        addDeserializer(Point::class.java, GeoJsonDeserializer(Point::class.java, "Point", GeoJsonWireFormat::readPointGeometry))
-        addDeserializer(LineString::class.java, GeoJsonDeserializer(LineString::class.java, "LineString", GeoJsonWireFormat::readLineString))
-        addDeserializer(Polygon::class.java, GeoJsonDeserializer(Polygon::class.java, "Polygon", GeoJsonWireFormat::readPolygon))
+        addDeserializer(Point::class.java, GeoJsonDeserializer(Point::class.java, "Point", "Expected coordinates array with 2 elements [longitude, latitude]", GeoJsonWireFormat::readPointGeometry))
+        addDeserializer(LineString::class.java, GeoJsonDeserializer(LineString::class.java, "LineString", "LineString must have at least 2 points", GeoJsonWireFormat::readLineString))
+        addDeserializer(Polygon::class.java, GeoJsonDeserializer(Polygon::class.java, "Polygon", "Polygon must have at least one ring (shell)", GeoJsonWireFormat::readPolygon))
     }
 }
 
@@ -57,6 +57,7 @@ private class GeoJsonSerializer<T : Any>(
 private class GeoJsonDeserializer<T : Any>(
     private val target: Class<T>,
     private val type: String,
+    private val missingCoordinates: String,
     private val read: (JsonNode) -> T
 ) : ValueDeserializer<T>() {
     override fun deserialize(parser: JsonParser, context: DeserializationContext): T {
@@ -72,7 +73,7 @@ private class GeoJsonDeserializer<T : Any>(
                 }
             }
             if (declaredType != type) throw GeoJsonException("Expected type to be '$type'")
-            read(coordinates ?: throw GeoJsonException("Expected coordinates array for the $type"))
+            read(coordinates ?: throw GeoJsonException(missingCoordinates))
         } catch (exception: GeoJsonException) {
             target.cast(context.reportInputMismatch(target, exception.message ?: "Invalid GeoJSON"))
         }

@@ -51,20 +51,33 @@ class GeospatialModuleTest {
 
     private fun rejects(message: String, json: String, type: Class<*>) {
         val exception = assertThrows(DatabindException::class.java) { mapper.readValue(json, type) }
-        assertTrue(exception.message!!.contains(message), exception.message)
+        assertTrue(exception.message!!.startsWith(message), exception.message)
     }
 
     @Test
     fun `invalid geometries are rejected with the C# messages`() {
         rejects("Expected type to be 'Point'", """{"type":"LineString","coordinates":[1,2]}""", Point::class.java)
         rejects("Expected coordinates array with 2 elements", """{"type":"Point","coordinates":[1,2,3]}""", Point::class.java)
-        rejects("Expected coordinates array", """{"type":"Point"}""", Point::class.java)
         rejects("Expected start of object", "[1,2]", Point::class.java)
         rejects("Each coordinate must have exactly 2 elements", """{"type":"LineString","coordinates":[[1,2],[3]]}""", LineString::class.java)
         rejects("LineString must have at least 2 points", """{"type":"LineString","coordinates":[[1,2]]}""", LineString::class.java)
         rejects("Polygon must have at least one ring", """{"type":"Polygon","coordinates":[]}""", Polygon::class.java)
         rejects("LinearRing must have at least 4 points", """{"type":"Polygon","coordinates":[[[0,0],[1,0],[0,0]]]}""", Polygon::class.java)
         rejects("LinearRing must be closed", """{"type":"Polygon","coordinates":[[[0,0],[1,0],[1,1],[2,2]]]}""", Polygon::class.java)
+    }
+
+    @Test
+    fun `missing coordinates report each geometry message from C#`() {
+        rejects("Expected coordinates array with 2 elements [longitude, latitude]", """{"type":"Point"}""", Point::class.java)
+        rejects("LineString must have at least 2 points", """{"type":"LineString"}""", LineString::class.java)
+        rejects("Polygon must have at least one ring (shell)", """{"type":"Polygon"}""", Polygon::class.java)
+    }
+
+    @Test
+    fun `null coordinates report the C# start-of-array message`() {
+        for ((type, name) in listOf(Point::class.java to "Point", LineString::class.java to "LineString", Polygon::class.java to "Polygon")) {
+            rejects("Expected start of array for coordinates", """{"type":"$name","coordinates":null}""", type)
+        }
     }
 
     @Test
