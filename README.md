@@ -122,7 +122,21 @@ var mapper = JsonMapper.builder()
     .build();
 ```
 
-Import the types from `io.cratis.fundamentals.jackson`. `EnumModule`, `TimeSpanModule` and `TemporalModule` are never ServiceLoader-discovered; discovery creates the no-arg `ConceptsModule` with `ConceptKeyFormat.PLAIN`. Choose the key option explicitly on that module; registering it before or after EnumModule/TimeSpanModule gives the same wire.
+Import the types from `io.cratis.fundamentals.jackson`. `EnumModule`, `TimeSpanModule`, `GeospatialModule` and `TemporalModule` are never ServiceLoader-discovered; discovery creates the no-arg `ConceptsModule` with `ConceptKeyFormat.PLAIN`. Choose the key option explicitly on that module; registering it before or after EnumModule/TimeSpanModule gives the same wire.
+
+### Geospatial
+
+`io.cratis.fundamentals.geospatial` has `Point(longitude, latitude)`, `LineString`, `LinearRing` and `Polygon(shell, holes)`. They are plain data classes with no validation. The opt-in `GeospatialModule` reads and writes them as GeoJSON (`{"type":"Point","coordinates":[lon,lat]}`), with C#-style validation on read; it is never ServiceLoader-discovered.
+
+```kotlin
+val mapper = JsonMapper.builder().addModule(GeospatialModule()).build()
+mapper.writeValueAsString(Point(10.5, 59.25)) // {"type":"Point","coordinates":[10.5,59.25]}
+```
+
+```java
+var mapper = JsonMapper.builder().addModule(new GeospatialModule()).build();
+var json = mapper.writeValueAsString(new Point(10.5, 59.25));
+```
 
 ## Derived types (opt-in)
 

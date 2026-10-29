@@ -15,6 +15,10 @@ Raw temporal handlers are explicit-only in `TemporalModule`. LocalTime concepts 
 
 The `double_whole` row is read-only because .NET writes `42` and Jackson writes `42.0`. Kotlin tests separately pin Jackson's emitted whole-double form, plain-decimal notation, non-ASCII string emission and nanosecond timestamps. These are deliberate deviations, not oracle evidence; see [the parity ledger](../../../../../../Documentation/parity.md). Existing Kotlin and Java conformance tests preserve the default text-key contract, deliberately different from C# `ComplexKeyDictionaryJsonConverterFactory.cs:64-79,87-124` for GUID/string/date values. The opt-in dictionary fixture covers embedded JSON instead.
 
+## Opt-in geospatial
+
+`geospatial.json` is **hand-derived** from `Json/{Point,LineString,Polygon}JsonConverter.cs` at the pinned revision, not captured from a live .NET oracle, and uses the same revision/source-root/cases envelope. Rows with whole-number coordinates are `read` only because Jackson writes `1.0` where .NET writes `1`. `GeospatialModuleTest` consumes every row, rejects missing/duplicate names and pins the C# validation messages; `GeospatialModuleJavaConformanceTest` round-trips a record from Java. `GeospatialModule` is never ServiceLoader-discovered.
+
 ## Opt-in enums, TimeSpan and dictionaries
 
 `enums.json`, `timespan.json` and `dictionaries.json` are also **hand-derived**, not captured from a live .NET oracle. Each uses the same revision/source-root/cases envelope and records direction and source lines. `EnumModuleTest`, `TimeSpanModuleTest` and `ConceptJsonKeysTest` consume every row, reject missing/duplicate names and include the source in dynamic test names. `WireContractsJavaConformanceTest` exercises the public modules and key-format constructor from Java. Existing concept/temporal fixtures and their tests are unchanged.
