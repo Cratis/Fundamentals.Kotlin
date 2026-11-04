@@ -196,6 +196,229 @@ public final class io/cratis/fundamentals/geospatial/Polygon {
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract class io/cratis/fundamentals/monads/Catch {
+	public static final field Companion Lio/cratis/fundamentals/monads/Catch$Companion;
+	public static final fun failed (Ljava/lang/Exception;)Lio/cratis/fundamentals/monads/Catch;
+	public final fun isSuccess ()Z
+	public final fun match (Ljava/util/function/Supplier;Ljava/util/function/Function;)Ljava/lang/Object;
+	public final fun rethrowError ()V
+	public static final fun success ()Lio/cratis/fundamentals/monads/Catch;
+	public final fun switchOn (Ljava/lang/Runnable;Ljava/util/function/Consumer;)V
+	public final fun tryGetException ()Ljava/util/Optional;
+}
+
+public final class io/cratis/fundamentals/monads/Catch$Caught : io/cratis/fundamentals/monads/Catch {
+	public fun <init> (Ljava/lang/Exception;)V
+	public final fun component1 ()Ljava/lang/Exception;
+	public final fun copy (Ljava/lang/Exception;)Lio/cratis/fundamentals/monads/Catch$Caught;
+	public static synthetic fun copy$default (Lio/cratis/fundamentals/monads/Catch$Caught;Ljava/lang/Exception;ILjava/lang/Object;)Lio/cratis/fundamentals/monads/Catch$Caught;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getException ()Ljava/lang/Exception;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/monads/Catch$Companion {
+	public final fun failed (Ljava/lang/Exception;)Lio/cratis/fundamentals/monads/Catch;
+	public final fun success ()Lio/cratis/fundamentals/monads/Catch;
+}
+
+public final class io/cratis/fundamentals/monads/Catch$Success : io/cratis/fundamentals/monads/Catch {
+	public static final field INSTANCE Lio/cratis/fundamentals/monads/Catch$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class io/cratis/fundamentals/monads/CatchWithError {
+	public static final field Companion Lio/cratis/fundamentals/monads/CatchWithError$Companion;
+	public static final fun failed (Ljava/lang/Exception;)Lio/cratis/fundamentals/monads/CatchWithError;
+	public static final fun failed (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithError;
+	public final fun isSuccess ()Z
+	public final fun match (Ljava/util/function/Function;Ljava/util/function/Function;Ljava/util/function/Function;)Ljava/lang/Object;
+	public final fun rethrowError ()V
+	public static final fun success (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithError;
+	public final fun switchOn (Ljava/util/function/Consumer;Ljava/util/function/Consumer;Ljava/util/function/Consumer;)V
+	public final fun tryGetError ()Ljava/util/Optional;
+	public final fun tryGetException ()Ljava/util/Optional;
+	public final fun tryGetResult ()Ljava/util/Optional;
+}
+
+public final class io/cratis/fundamentals/monads/CatchWithError$Caught : io/cratis/fundamentals/monads/CatchWithError {
+	public fun <init> (Ljava/lang/Exception;)V
+	public final fun component1 ()Ljava/lang/Exception;
+	public final fun copy (Ljava/lang/Exception;)Lio/cratis/fundamentals/monads/CatchWithError$Caught;
+	public static synthetic fun copy$default (Lio/cratis/fundamentals/monads/CatchWithError$Caught;Ljava/lang/Exception;ILjava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithError$Caught;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getException ()Ljava/lang/Exception;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/monads/CatchWithError$Companion {
+	public final fun failed (Ljava/lang/Exception;)Lio/cratis/fundamentals/monads/CatchWithError;
+	public final fun failed (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithError;
+	public final fun success (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithError;
+}
+
+public final class io/cratis/fundamentals/monads/CatchWithError$Failure : io/cratis/fundamentals/monads/CatchWithError {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithError$Failure;
+	public static synthetic fun copy$default (Lio/cratis/fundamentals/monads/CatchWithError$Failure;Ljava/lang/Object;ILjava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithError$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/monads/CatchWithError$Success : io/cratis/fundamentals/monads/CatchWithError {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithError$Success;
+	public static synthetic fun copy$default (Lio/cratis/fundamentals/monads/CatchWithError$Success;Ljava/lang/Object;ILjava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithError$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class io/cratis/fundamentals/monads/CatchWithValue {
+	public static final field Companion Lio/cratis/fundamentals/monads/CatchWithValue$Companion;
+	public static final fun failed (Ljava/lang/Exception;)Lio/cratis/fundamentals/monads/CatchWithValue;
+	public final fun isSuccess ()Z
+	public final fun match (Ljava/util/function/Function;Ljava/util/function/Function;)Ljava/lang/Object;
+	public final fun rethrowError ()V
+	public static final fun success (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithValue;
+	public final fun switchOn (Ljava/util/function/Consumer;Ljava/util/function/Consumer;)V
+	public final fun tryGetException ()Ljava/util/Optional;
+	public final fun tryGetResult ()Ljava/util/Optional;
+}
+
+public final class io/cratis/fundamentals/monads/CatchWithValue$Caught : io/cratis/fundamentals/monads/CatchWithValue {
+	public fun <init> (Ljava/lang/Exception;)V
+	public final fun component1 ()Ljava/lang/Exception;
+	public final fun copy (Ljava/lang/Exception;)Lio/cratis/fundamentals/monads/CatchWithValue$Caught;
+	public static synthetic fun copy$default (Lio/cratis/fundamentals/monads/CatchWithValue$Caught;Ljava/lang/Exception;ILjava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithValue$Caught;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getException ()Ljava/lang/Exception;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/monads/CatchWithValue$Companion {
+	public final fun failed (Ljava/lang/Exception;)Lio/cratis/fundamentals/monads/CatchWithValue;
+	public final fun success (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithValue;
+}
+
+public final class io/cratis/fundamentals/monads/CatchWithValue$Success : io/cratis/fundamentals/monads/CatchWithValue {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithValue$Success;
+	public static synthetic fun copy$default (Lio/cratis/fundamentals/monads/CatchWithValue$Success;Ljava/lang/Object;ILjava/lang/Object;)Lio/cratis/fundamentals/monads/CatchWithValue$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class io/cratis/fundamentals/monads/Result {
+	public static final field Companion Lio/cratis/fundamentals/monads/Result$Companion;
+	public static final fun failed ()Lio/cratis/fundamentals/monads/Result;
+	public final fun isSuccess ()Z
+	public static final fun success ()Lio/cratis/fundamentals/monads/Result;
+}
+
+public final class io/cratis/fundamentals/monads/Result$Companion {
+	public final fun failed ()Lio/cratis/fundamentals/monads/Result;
+	public final fun success ()Lio/cratis/fundamentals/monads/Result;
+}
+
+public final class io/cratis/fundamentals/monads/Result$Failure : io/cratis/fundamentals/monads/Result {
+	public static final field INSTANCE Lio/cratis/fundamentals/monads/Result$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/monads/Result$Success : io/cratis/fundamentals/monads/Result {
+	public static final field INSTANCE Lio/cratis/fundamentals/monads/Result$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class io/cratis/fundamentals/monads/ResultWithError {
+	public static final field Companion Lio/cratis/fundamentals/monads/ResultWithError$Companion;
+	public static final fun failed (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithError;
+	public final fun isSuccess ()Z
+	public final fun match (Ljava/util/function/Supplier;Ljava/util/function/Function;)Ljava/lang/Object;
+	public static final fun success ()Lio/cratis/fundamentals/monads/ResultWithError;
+	public final fun switchOn (Ljava/lang/Runnable;Ljava/util/function/Consumer;)V
+	public final fun tryGetError ()Ljava/util/Optional;
+}
+
+public final class io/cratis/fundamentals/monads/ResultWithError$Companion {
+	public final fun failed (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithError;
+	public final fun success ()Lio/cratis/fundamentals/monads/ResultWithError;
+}
+
+public final class io/cratis/fundamentals/monads/ResultWithError$Failure : io/cratis/fundamentals/monads/ResultWithError {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithError$Failure;
+	public static synthetic fun copy$default (Lio/cratis/fundamentals/monads/ResultWithError$Failure;Ljava/lang/Object;ILjava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithError$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/monads/ResultWithError$Success : io/cratis/fundamentals/monads/ResultWithError {
+	public fun <init> ()V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class io/cratis/fundamentals/monads/ResultWithValue {
+	public static final field Companion Lio/cratis/fundamentals/monads/ResultWithValue$Companion;
+	public static final fun failed (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithValue;
+	public final fun isSuccess ()Z
+	public final fun match (Ljava/util/function/Function;Ljava/util/function/Function;)Ljava/lang/Object;
+	public static final fun success (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithValue;
+	public final fun switchOn (Ljava/util/function/Consumer;Ljava/util/function/Consumer;)V
+	public final fun tryGetError ()Ljava/util/Optional;
+	public final fun tryGetResult ()Ljava/util/Optional;
+}
+
+public final class io/cratis/fundamentals/monads/ResultWithValue$Companion {
+	public final fun failed (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithValue;
+	public final fun success (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithValue;
+}
+
+public final class io/cratis/fundamentals/monads/ResultWithValue$Failure : io/cratis/fundamentals/monads/ResultWithValue {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithValue$Failure;
+	public static synthetic fun copy$default (Lio/cratis/fundamentals/monads/ResultWithValue$Failure;Ljava/lang/Object;ILjava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithValue$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/cratis/fundamentals/monads/ResultWithValue$Success : io/cratis/fundamentals/monads/ResultWithValue {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun copy (Ljava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithValue$Success;
+	public static synthetic fun copy$default (Lio/cratis/fundamentals/monads/ResultWithValue$Success;Ljava/lang/Object;ILjava/lang/Object;)Lio/cratis/fundamentals/monads/ResultWithValue$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class io/cratis/fundamentals/serialization/CamelCaseNamingPolicy : io/cratis/fundamentals/serialization/NamingPolicy {
 	public fun <init> ()V
 	public fun <init> (Z)V
