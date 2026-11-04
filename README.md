@@ -14,7 +14,7 @@ Shared domain primitives for JVM applications: typed concepts, correlation ident
 
 | Artifact | Purpose |
 | --- | --- |
-| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, thread-bound `CorrelationIdContext`, derived-type annotation/registry, string casing, `NamingPolicy` with `DefaultNamingPolicy`/`CamelCaseNamingPolicy`; no Jackson runtime dependency |
+| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, thread-bound `CorrelationIdContext`, derived-type annotation/registry, Result/Catch monads, string casing, `NamingPolicy` with `DefaultNamingPolicy`/`CamelCaseNamingPolicy`; no Jackson runtime dependency |
 | `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` (optional embedded JSON keys), opt-in `TemporalModule`, `EnumModule`, `TimeSpanModule` and `DerivedTypesModule`, `AcronymFriendlyCamelCaseNamingStrategy`; includes core and Jackson databind transitively |
 
 Choose a published release version and replace `<released-version>` below. No release is implied by this source checkout.
@@ -271,6 +271,47 @@ import io.cratis.fundamentals.serialization.NamingPolicy;
 NamingPolicy policy = new DefaultNamingPolicy(false);      // keep the simple class name
 NamingPolicy custom = type -> "app_" + type.getSimpleName(); // getPropertyName defaults to identity
 ```
+
+## Monads
+
+The core package `io.cratis.fundamentals.monads` provides sealed, non-null Result/Catch cases:
+
+| C# | JVM |
+| --- | --- |
+| `Result` | `Result` |
+| `Result<TError>` | `ResultWithError<TError>` |
+| `Result<TResult, TError>` | `ResultWithValue<TResult, TError>` |
+| `Catch` | `Catch` |
+| `Catch<TResult>` | `CatchWithValue<TResult>` |
+| `Catch<TResult, TError>` | `CatchWithError<TResult, TError>` |
+| `Option<TValue>` | Java `java.util.Optional<TValue>` / Kotlin `TValue?`; no new type |
+
+```kotlin
+import io.cratis.fundamentals.monads.Catch
+import io.cratis.fundamentals.monads.ResultWithValue
+
+val result: ResultWithValue<Int, String> = ResultWithValue.success(42)
+val message = when (result) {
+    is ResultWithValue.Success -> "Value: ${result.value}"
+    is ResultWithValue.Failure -> "Error: ${result.error}"
+}
+val exception = IllegalStateException("original")
+Catch.failed(exception).rethrowError() // throws this same instance with its original stack trace
+```
+
+```java
+import io.cratis.fundamentals.monads.ResultWithValue;
+
+ResultWithValue<Integer, String> result = ResultWithValue.success(42);
+String message = result.match(value -> "Value: " + value, error -> "Error: " + error);
+if (result instanceof ResultWithValue.Success<Integer, String> success) {
+    System.out.println(success.getValue());
+}
+```
+
+Factories live on the target type; implicit conversions and cross-type C# convenience statics are not ported. Use `isSuccess()`, `tryGet*()` returning `Optional`, `match` for a return value and `switchOn` for side effects. Kotlin exposes `isSuccess` as a property and supports exhaustive `when`; the emitted `PermittedSubclasses` attribute also enables Java 21 switch patterns (Java consumer tests target 17).
+
+An explicit import of our `Result` shadows `kotlin.Result`; use `import io.cratis.fundamentals.monads.Result as CratisResult` when a file needs both. Payloads reject null with NPE. Catch types store `Exception`, not JVM `Error`; `rethrowError()` declares `throws Exception` for checked Java exceptions and does nothing on success or a typed error. When `TError` is itself an `Exception` type, use `CatchWithError.Failure(error)` directly, since `failed(exception)` selects the captured-exception overload. See the [Monads mapping](Documentation/parity.md#monads-mapping) for the complete migration contract.
 
 ## Jackson registration and construction
 
