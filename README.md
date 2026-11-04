@@ -30,6 +30,8 @@ dependencies {
 }
 ```
 
+The [Kotlin](#kotlin) and [Java](#java) examples are alternative starting points. After either, continue with [shared construction and registration](#jackson-registration-and-construction).
+
 ## Kotlin
 
 ```kotlin
@@ -92,11 +94,33 @@ public final class Example {
 }
 ```
 
+## Jackson registration and construction
+
+Using an Arc.Kotlin-configured mapper? Check the [boundary and ownership ledger](Documentation/parity.md#boundary-and-ownership) before choosing optional Fundamentals Jackson modules. The registration examples below concern this repository's optional Jackson integration.
+
 A Java record's component must be boxed for generic primitive values: `Integer value`, not `int value`. There is only one required interface method, `value()`. Equality, hashing, comparison, validation, null rejection and display behavior belong to the implementation. Kotlin data classes and Java records supply value equality naturally.
 
 `ConceptDescriptor.of(OrderId::class.java)` (Java: `ConceptDescriptor.of(OrderId.class)`) caches the value type, construction and extraction. Construction prefers a record canonical constructor, public static `of(value)` (Kotlin: `@JvmStatic`), then a public single-argument constructor. `ConceptFactory` converts a bounded scalar set; integer conversions reject loss/overflow and invalid values fail rather than becoming defaults.
 
 `ConceptsModule` remains ServiceLoader-discoverable. `TemporalModule` is explicit only: raw LocalDate writes `yyyy-MM-dd`, and raw LocalTime writes `HH:mm:ss.fffffff`. LocalTime concepts always use that seven-digit form, truncating finer nanoseconds; this changes previously delegated LocalTime concept output. Reads are ISO-only, not culture-sensitive. Scalar concept collections use normal Jackson delegation, retaining null elements (unlike C#). See the [fixture provenance](Source/Jackson/src/test/resources/golden/README.md) and ledger for exact bounds.
+
+Use explicit `addModule(new ConceptsModule())` in Java or `addModule(ConceptsModule())` in Kotlin. Alternatively:
+
+```java
+var mapper = JsonMapper.builder().findAndAddModules().build();
+```
+
+The artifact registers `tools.jackson.databind.JacksonModule` through ServiceLoader. No annotations, Spring configuration or Kotlin Jackson module are needed for concept construction. The module chooses, in order:
+
+1. A one-component Java record's canonical constructor (including package-private records on the classpath).
+2. A public static `of(value)` returning the concept's exact class.
+3. A public single-argument constructor with a compatible primitive or boxed parameter.
+
+A private constructor plus a public static `of` works. Missing construction shapes fail with a Jackson databind error naming the type and the accepted shapes. Named Java modules must permit reflective access to the relevant package.
+
+Supported underlying scalars: UUID, String, Int/Integer, Long, Short, Byte, Double, Float, BigDecimal, Boolean, LocalDate and OffsetDateTime. JSON null stays null; lists of concepts contain scalar values. UUID text is canonical lowercase. OffsetDateTime writes explicit seconds, a trimmed optional fraction and numeric offsets (including `+00:00`); reads preserve the original offset and accept `Z`.
+
+Concept map keys default to the underlying **text** value, not JSON text inside the property name. Opt into `ConceptKeyFormat.EMBEDDED_JSON` on `ConceptsModule` for C#-style names; outer quote escaping can still differ (`\"` versus `\u0022`) while decoded property names agree. Signed JVM bytes, whole-float/exponent spelling, Unicode escaping, arbitrary-precision decimal range and nanosecond timestamps also differ from .NET. See [wire differences](Documentation/parity.md#wire-and-language-differences) before sharing payloads across runtimes. Delegation for unsupported types does not imply parity.
 
 ### Opt-in wire contracts
 
@@ -271,26 +295,6 @@ import io.cratis.fundamentals.serialization.NamingPolicy;
 NamingPolicy policy = new DefaultNamingPolicy(false);      // keep the simple class name
 NamingPolicy custom = type -> "app_" + type.getSimpleName(); // getPropertyName defaults to identity
 ```
-
-## Jackson registration and construction
-
-Use explicit `addModule(new ConceptsModule())` in Java or `addModule(ConceptsModule())` in Kotlin. Alternatively:
-
-```java
-var mapper = JsonMapper.builder().findAndAddModules().build();
-```
-
-The artifact registers `tools.jackson.databind.JacksonModule` through ServiceLoader. No annotations, Spring configuration or Kotlin Jackson module are needed for concept construction. The module chooses, in order:
-
-1. A one-component Java record's canonical constructor (including package-private records on the classpath).
-2. A public static `of(value)` returning the concept's exact class.
-3. A public single-argument constructor with a compatible primitive or boxed parameter.
-
-A private constructor plus a public static `of` works. Missing construction shapes fail with a Jackson databind error naming the type and the accepted shapes. Named Java modules must permit reflective access to the relevant package.
-
-Supported underlying scalars: UUID, String, Int/Integer, Long, Short, Byte, Double, Float, BigDecimal, Boolean, LocalDate and OffsetDateTime. JSON null stays null; lists of concepts contain scalar values. UUID text is canonical lowercase. OffsetDateTime writes explicit seconds, a trimmed optional fraction and numeric offsets (including `+00:00`); reads preserve the original offset and accept `Z`.
-
-Concept map keys default to the underlying **text** value, not JSON text inside the property name. Opt into `ConceptKeyFormat.EMBEDDED_JSON` on `ConceptsModule` for C#-style names; outer quote escaping can still differ (`\"` versus `\u0022`) while decoded property names agree. Signed JVM bytes, whole-float/exponent spelling, Unicode escaping, arbitrary-precision decimal range and nanosecond timestamps also differ from .NET. See [wire differences](Documentation/parity.md#wire-and-language-differences) before sharing payloads across runtimes. Delegation for unsupported types does not imply parity.
 
 ## Build and test
 
