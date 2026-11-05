@@ -125,6 +125,24 @@ The six Result/Catch types port the public Monads contracts at `6ae7eb7d133afdb7
 | Exception-typed `TError` | `failed(exception)` selects Caught; construct `CatchWithError.Failure(error)` directly for a typed error that is an exception. |
 | Equality / `ToString` | Equality and hash are by value per case (plain C# Result uses reference equality); C# ToString text is not ported. No-payload generic Success cases compare equal. |
 
+## Monads mapping
+
+The six Result/Catch types port the public Monads contracts at `6ae7eb7d133afdb7adaf161ca185eaa189c7372b` (unchanged since the global `f87af60` pin). `ResultTest` ports `Fundamentals.Specs/Monads/for_Result/{with_error_type,with_error_type_and_value}`; `CatchTest` ports `for_Catch/{without_value,with_value,with_error_type}`; `OptionEquivalentTest` ports `for_Option/when_{value,none_value}.cs`. Matching Java tests exercise the same consumer paths. This is not a port of OneOf itself.
+
+| C# contract | JVM mapping / deliberate difference |
+| --- | --- |
+| Implicit conversions | Explicit `success`/`failed` factories or nested case constructors. |
+| Explicit casts / `AsT0..2` | `tryGet*().orElseThrow()` or Kotlin smart casts; absent access throws `NoSuchElementException`, not `InvalidOperationException`. |
+| `TryGet*(out x)` | `tryGet*(): Optional<…>`; Kotlin can use `getOrNull()`. |
+| `Match` / `Switch` | `match` / `switchOn` using Java functional interfaces; no-payload branches take `Supplier` / `Runnable` instead of `None`. |
+| OneOf `Value` / `Index` / `IsTn` / `TryPickTn` | Not ported; use sealed cases, `isSuccess` and optional accessors. |
+| Cross-type statics on `Result` / `Catch` | Not ported because of JVM erasure clashes; call the target type's own factory, e.g. `ResultWithValue.failed(error)`. |
+| Null payloads | Rejected with NPE at Kotlin non-null boundaries; generic payloads have `Any` bounds. Use `ResultWithError` / `Catch` for no-value operations. |
+| `Exception` | `java.lang.Exception`; JVM `Error`s are not modelled. |
+| `RethrowError` | `rethrowError()` throws the same instance with unchanged stack trace, declared `throws Exception`; no-op for success and typed errors. |
+| Exception-typed `TError` | `failed(exception)` selects Caught; construct `CatchWithError.Failure(error)` directly for a typed error that is an exception. |
+| Equality / `ToString` | Equality and hash are by value per case (plain C# Result uses reference equality); C# ToString text is not ported. No-payload generic Success cases compare equal. |
+
 ## Wire and language differences
 
 - **Concept values and null:** Java/Kotlin implementations supply domain behavior themselves. The generic contract deliberately permits arbitrary `T`; it does not enforce C# constructor-time null rejection. Use Kotlin non-null storage or `Objects.requireNonNull` in a Java record's compact constructor. JSON null remains null at root, field and list-element positions; no wrapper is constructed. A concept whose `value()` is null writes JSON null (C# emits no scalar token). C# `Json/Globals.cs:52` `WhenWritingNull` is mapper configuration, not module behavior.
