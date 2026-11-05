@@ -3,19 +3,19 @@
 
 # Cratis Fundamentals for Kotlin and Java
 
-Shared domain primitives for JVM applications: typed concepts, correlation identifiers, .NET-compatible name casing and an optional Jackson 3 concept module. The surface includes generated values and patterns/checksums, **not full .NET Fundamentals parity**. See the [parity ledger](Documentation/parity.md) for exact source pins, evidence, differences and follow-up work.
+Shared domain primitives for JVM applications: typed concepts, correlation identifiers, string casing and optional Jackson 3 modules. The surface includes generated values and patterns/checksums, **not full .NET Fundamentals parity**. See the [parity ledger](Documentation/parity.md) for exact source pins, evidence, differences and follow-up work.
 
 ## Requirements and artifacts
 
 - JDK **17** or later; build with JDK 17.
-- Kotlin **2.4.21** for Kotlin consumers. Java consumers need no Kotlin source or compiler.
-- Jackson **3.2.4** (`tools.jackson.*`), aligned with Spring Boot 4.1, for the optional Jackson artifact. No Spring dependency is required.
+- Kotlin **2.4.21** for repository builds; compatibility with other Kotlin compiler versions is not established here. Java consumers need no Kotlin source or compiler.
+- Jackson **3.2.4** (`tools.jackson.*`) for the optional Jackson artifact. No Spring dependency is required; this checkout does not establish Spring Boot version compatibility.
 - Gradle wrapper **8.14.6** for repository builds; Maven Central for consumption.
 
 | Artifact | Purpose |
 | --- | --- |
-| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, thread-bound `CorrelationIdContext`, derived-type annotation/registry, string casing, `NamingPolicy` with `DefaultNamingPolicy`/`CamelCaseNamingPolicy`; no Jackson runtime dependency |
-| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` (optional embedded JSON keys), opt-in `TemporalModule`, `EnumModule`, `TimeSpanModule` and `DerivedTypesModule`, `AcronymFriendlyCamelCaseNamingStrategy`; includes core and Jackson databind transitively |
+| `io.cratis:fundamentals` | `ConceptAs`, `ConceptDescriptor`, `ConceptFactory`, `CorrelationId`, thread-bound `CorrelationIdContext`, geospatial value types, derived-type annotation/registry, Result/Catch monads, string casing, `NamingPolicy` with `DefaultNamingPolicy`/`CamelCaseNamingPolicy`; no Jackson runtime dependency |
+| `io.cratis:fundamentals-jackson` | Jackson 3 `ConceptsModule` (optional embedded JSON keys), opt-in `TemporalModule`, `EnumModule`, `TimeSpanModule`, `GeospatialModule` and `DerivedTypesModule`, `AcronymFriendlyCamelCaseNamingStrategy`; includes core and Jackson databind transitively |
 
 Choose a published release version and replace `<released-version>` below. No release is implied by this source checkout.
 
@@ -118,13 +118,13 @@ The artifact registers `tools.jackson.databind.JacksonModule` through ServiceLoa
 
 A private constructor plus a public static `of` works. Missing construction shapes fail with a Jackson databind error naming the type and the accepted shapes. Named Java modules must permit reflective access to the relevant package.
 
-Supported underlying scalars: UUID, String, Int/Integer, Long, Short, Byte, Double, Float, BigDecimal, Boolean, LocalDate and OffsetDateTime. JSON null stays null; lists of concepts contain scalar values. UUID text is canonical lowercase. OffsetDateTime writes explicit seconds, a trimmed optional fraction and numeric offsets (including `+00:00`); reads preserve the original offset and accept `Z`.
+Supported underlying scalars: UUID, String, Int/Integer, Long, Short, Byte, Double, Float, BigDecimal, Boolean, LocalDate, LocalTime and OffsetDateTime. JSON null stays null; lists of concepts contain scalar values. UUID text is canonical lowercase. OffsetDateTime writes explicit seconds, a trimmed optional fraction and numeric offsets (including `+00:00`); reads preserve the original offset and accept `Z`.
 
 Concept map keys default to the underlying **text** value, not JSON text inside the property name. Opt into `ConceptKeyFormat.EMBEDDED_JSON` on `ConceptsModule` for C#-style names; outer quote escaping can still differ (`\"` versus `\u0022`) while decoded property names agree. Signed JVM bytes, whole-float/exponent spelling, Unicode escaping, arbitrary-precision decimal range and nanosecond timestamps also differ from .NET. See [wire differences](Documentation/parity.md#wire-and-language-differences) before sharing payloads across runtimes. Delegation for unsupported types does not imply parity.
 
 ### Opt-in wire contracts
 
-Existing `ConceptsModule()` and `TemporalModule()` output is unchanged. `EnumModule` writes enum values as ordinal numbers and reads ordinals, numeric strings, case-insensitive names, `@JsonProperty`/`@JsonAlias` and `toString()` text; undefined values fail. Enum map keys keep Jackson's names. Ordinals match C# only for declarations ordered from zero without gaps; flags, explicit values and non-int backing types are not supported.
+The following modules and key option are opt-in; they do not change the defaults of `ConceptsModule()` or `TemporalModule()`. `EnumModule` writes enum values as ordinal numbers and reads ordinals, numeric strings, case-insensitive names, `@JsonProperty`/`@JsonAlias` and `toString()` text; undefined values fail. Enum map keys keep Jackson's names. Ordinals match C# only for declarations ordered from zero without gaps; flags, explicit values and non-int backing types are not supported.
 
 `TimeSpanModule` writes Duration values and map keys as C# TimeSpan `"c"` strings (`[-][d.]hh:mm:ss[.fffffff]`), truncating nanoseconds toward zero to 100 ns. Reads accept this shape and ISO-8601, not culture-sensitive or short day/hour-minute forms. JVM durations outside the C# TimeSpan range are not restricted.
 
@@ -150,7 +150,9 @@ Import the types from `io.cratis.fundamentals.jackson`. `EnumModule`, `TimeSpanM
 
 ### Geospatial
 
-`io.cratis.fundamentals.geospatial` has `Point(longitude, latitude)`, `LineString`, `LinearRing` and `Polygon(shell, holes)`. They are plain data classes with no validation. The opt-in `GeospatialModule` reads and writes them as GeoJSON (`{"type":"Point","coordinates":[lon,lat]}`), with C#-style validation on read; it is never ServiceLoader-discovered.
+`io.cratis.fundamentals.geospatial` has `Point(longitude, latitude)`, `LineString`, `LinearRing` and `Polygon(shell, holes)`. They are plain data classes with no constructor validation. The opt-in `GeospatialModule` reads and writes Point, LineString and Polygon as GeoJSON (`{"type":"Point","coordinates":[lon,lat]}`), with validation on read; it is never ServiceLoader-discovered. LinearRing has no standalone converter; the module handles its coordinates within Polygon.
+
+These mapper excerpts use `Point` from `io.cratis.fundamentals.geospatial` and `GeospatialModule` from `io.cratis.fundamentals.jackson`, alongside the `JsonMapper` import shown above.
 
 ```kotlin
 val mapper = JsonMapper.builder().addModule(GeospatialModule()).build()
@@ -296,6 +298,47 @@ NamingPolicy policy = new DefaultNamingPolicy(false);      // keep the simple cl
 NamingPolicy custom = type -> "app_" + type.getSimpleName(); // getPropertyName defaults to identity
 ```
 
+## Monads
+
+The core package `io.cratis.fundamentals.monads` provides sealed, non-null Result/Catch cases:
+
+| C# | JVM |
+| --- | --- |
+| `Result` | `Result` |
+| `Result<TError>` | `ResultWithError<TError>` |
+| `Result<TResult, TError>` | `ResultWithValue<TResult, TError>` |
+| `Catch` | `Catch` |
+| `Catch<TResult>` | `CatchWithValue<TResult>` |
+| `Catch<TResult, TError>` | `CatchWithError<TResult, TError>` |
+| `Option<TValue>` | Java `java.util.Optional<TValue>` / Kotlin `TValue?`; no new type |
+
+```kotlin
+import io.cratis.fundamentals.monads.Catch
+import io.cratis.fundamentals.monads.ResultWithValue
+
+val result: ResultWithValue<Int, String> = ResultWithValue.success(42)
+val message = when (result) {
+    is ResultWithValue.Success -> "Value: ${result.value}"
+    is ResultWithValue.Failure -> "Error: ${result.error}"
+}
+val exception = IllegalStateException("original")
+Catch.failed(exception).rethrowError() // throws this same instance with its original stack trace
+```
+
+```java
+import io.cratis.fundamentals.monads.ResultWithValue;
+
+ResultWithValue<Integer, String> result = ResultWithValue.success(42);
+String message = result.match(value -> "Value: " + value, error -> "Error: " + error);
+if (result instanceof ResultWithValue.Success<Integer, String> success) {
+    System.out.println(success.getValue());
+}
+```
+
+Factories live on the target type; implicit conversions and cross-type C# convenience statics are not ported. All six types expose `isSuccess()` (a property in Kotlin). The generic Result types and all Catch types also provide `tryGet*()` returning `Optional`, `match` for a return value and `switchOn` for side effects. Sealed cases support exhaustive Kotlin `when`; the JVM 17 target also enables Java 21 switch patterns (Java consumer tests target 17).
+
+An explicit import of our `Result` shadows `kotlin.Result`; use `import io.cratis.fundamentals.monads.Result as CratisResult` when a file needs both. Payloads reject null with NPE. Catch types store `Exception`, not JVM `Error`; `rethrowError()` declares `throws Exception` for checked Java exceptions and does nothing on success or a typed error. When `TError` is itself an `Exception` type, use `CatchWithError.Failure(error)` directly, since `failed(exception)` selects the captured-exception overload. See the [Monads mapping](Documentation/parity.md#monads-mapping) for the complete migration contract.
+
 ## Build and test
 
 ```sh
@@ -310,8 +353,8 @@ Every PR needs exactly one release-intent label: `major`, `minor`, `patch`, or `
 
 ## Scope
 
-General ConceptMap/ConceptFactory APIs, temporal/collection converter parity, AsyncLocal-style correlation propagation (`CorrelationIdContext` is thread-bound only) and the broader Fundamentals library are not implemented. Their follow-up issues are linked in the [ledger](Documentation/parity.md#surfaces).
+An assembly/classpath concept registry, general-purpose conversion, full temporal/collection converter parity, AsyncLocal-style correlation propagation (`CorrelationIdContext` is thread-bound only) and the broader Fundamentals library are not implemented. `ConceptDescriptor` and `ConceptFactory` provide the bounded construction and scalar conversions described above. Their follow-up issues are linked in the [ledger](Documentation/parity.md#surfaces).
 
-Arc.Kotlin depends on `io.cratis:fundamentals` (concepts, casing, naming policy) and reads this `@DerivedType` annotation (Cratis/Arc.Kotlin#301). Arc keeps its own `_derivedTypeId` registry and codec: per-base registrations generated by its KSP processor, and a missing discriminator is an error. Arc does not use `fundamentals-jackson`; `DerivedTypesModule` is opt-in and is not discovered by service loading, and an Arc-configured mapper does not need it: Arc's codec already writes and reads `_derivedTypeId`. Arc keeps its enum contract (`ArcEnum`, `@ArcEnumValue`, `@Flags`) and its own enum codec, and does not use `EnumModule`. These types stay in Arc.Kotlin by decision (Cratis/Arc.Kotlin#301, enum stage), because their C# counterparts are language and standard-library features, not Fundamentals types. Converging Arc's enum serializer with `EnumModule` needs a separate compatibility decision: it would drop explicit values and broaden accepted input, and Arc exempts protocol enums (`ArcJacksonModule.kt:152-158`). This repository does not silently re-export or replace Arc's types. Arc keeps its own concept construction, concept JSON codec and `ArcPropertyNamingStrategy` (its wire follows Arc's scalar codec) and does not put `fundamentals-jackson` on its runtime classpath (Cratis/Arc.Kotlin#301, decision D7).
+Arc.Kotlin integration is tracked separately in Cratis/Arc.Kotlin#301. This source does not establish Arc's dependency versions, mapper setup or wire compatibility. Check the consuming application's configuration before adding Fundamentals modules; matching annotations or `_derivedTypeId` names are not enough to establish compatibility.
 
 Licensed under the [MIT license](LICENSE).
