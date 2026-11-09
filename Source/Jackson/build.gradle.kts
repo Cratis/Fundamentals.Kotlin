@@ -9,7 +9,7 @@ plugins {
     id("com.vanniktech.maven.publish")
 }
 
-val jacksonVersion = "3.2.4"
+val jacksonVersion = "3.3.0"
 
 kotlin {
     compilerOptions {
